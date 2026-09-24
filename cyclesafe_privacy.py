@@ -248,8 +248,13 @@ def test_privacy():
     assert res["status"] == "deleted"
     assert engine.verify_deletion("user_test") == True
 
+    import gc
+    gc.collect()
     if os.path.exists("test_temp_privacy.db"):
-        os.remove("test_temp_privacy.db")
+        try:
+            os.remove("test_temp_privacy.db")
+        except OSError:
+            pass
     print("ALL PRIVACY ENGINE TESTS PASSED")
 
 if __name__ == "__main__":

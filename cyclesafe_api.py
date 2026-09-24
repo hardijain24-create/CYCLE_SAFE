@@ -17,9 +17,16 @@ except ImportError:
     HAS_FASTAPI = False
     FastAPI = None
     HTTPException = Exception
-    Header = lambda default=None: None
+    Header = lambda *args, **kwargs: None
     Response = object
-    BaseModel = object
+    class BaseModel:
+        def __init__(self, **kwargs):
+            for k, v in kwargs.items():
+                setattr(self, k, v)
+        def model_dump(self):
+            return self.__dict__
+        def dict(self):
+            return self.__dict__
     def Field(*args, **kwargs): return None
 
 from cyclesafe_rules import CycleEntry, run_all_rules
@@ -185,9 +192,12 @@ def get_map_locations(lat: float = 19.0760, lon: float = 72.8777, radius_km: flo
     return map_engine.get_nearby(lat, lon, radius_km=radius_km, free_only=free_only, product_filter=product)
 
 @app.post("/map/checkin")
-def checkin_map_location(req: MapCheckinRequest, device_token: str = Header("demo_device_token")):
+def checkin_map_location(req: MapCheckinRequest, device_token: Optional[str] = Header(None, alias="device-token"), device_token_alt: Optional[str] = Header(None, alias="device_token")):
     """Anonymous community check-in for access points."""
-    res = map_engine.submit_checkin(device_token, req.location_id, req.status, req.products, req.note)
+    token = device_token or device_token_alt
+    if not token:
+        raise HTTPException(status_code=400, detail="Missing required header 'device-token'.")
+    res = map_engine.submit_checkin(token, req.location_id, req.status, req.products, req.note)
     if res["status"] == "error":
         raise HTTPException(status_code=400, detail=res["message"])
     return res

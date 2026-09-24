@@ -191,6 +191,72 @@ def test_A5_model_path_safety():
     assert path_blocked, "Loading model artifact outside models/ path must raise ValueError"
     print("TEST A5 PASSED: Model artifact path safety verified")
 
+def test_B1_B2_perimenopause_honest_uncertainty():
+    """Verify age >= 45 / perimenopause profile gets experimental label and widened interval."""
+    from cyclesafe_api import get_forecast, ForecastRequest, CycleLogInput
+
+    req = ForecastRequest(
+        user_id="user_peri_46",
+        age=46,
+        is_perimenopause=True,
+        cycles=[
+            CycleLogInput(cycle_length_days=30.0),
+            CycleLogInput(cycle_length_days=32.0),
+            CycleLogInput(cycle_length_days=38.0),
+            CycleLogInput(cycle_length_days=40.0)
+        ]
+    )
+    res = get_forecast(req)
+    assert res["status"] == "success"
+    label = res["interval_details"]["label"]
+    assert "experimental, wider uncertainty (training data covers ages 21 to 43)" in label, f"Expected experimental label, got: {label}"
+    assert "calibrated" not in label.lower()
+    print("TEST B1/B2 PASSED: Perimenopause experimental label & honesty verified")
+
+def test_D1_D2_D3_rules_urgency_and_r2_urgent():
+    """Verify R2_URGENT, R4 dynamic days_since_last, and urgency sorting."""
+    from cyclesafe_rules import CycleEntry, run_all_rules
+    from datetime import date, timedelta
+
+    entries = [
+        CycleEntry(cycle_length_days=28.0, start_date=date.today() - timedelta(days=100), heavy_soaking_hourly=True),
+        CycleEntry(cycle_length_days=29.0, start_date=date.today() - timedelta(days=128), pain_score=3),
+    ]
+
+    results = run_all_rules(entries)
+    triggered = [r for r in results if r.triggered]
+    assert len(triggered) >= 1
+    # First triggered rule must be R2_URGENT with urgency 'urgent'
+    assert triggered[0].rule_id == "R2_URGENT"
+    assert triggered[0].urgency == "urgent"
+    
+    # Check R4 dynamic days_since_last calculation
+    r4_res = [r for r in results if r.rule_id == "R4"][0]
+    assert r4_res.triggered == True, "R4 should trigger dynamically when >90 days since last period start"
+    print("TEST D1/D2/D3 PASSED: Rule engine R2_URGENT, dynamic R4, and urgency sorting verified")
+
+def test_F1_F3_map_security():
+    """Verify missing device token returns 400, products match allowlist, and notes are sanitized."""
+    from cyclesafe_map import ProductAccessMapEngine, sanitize_note
+
+    engine = ProductAccessMapEngine()
+    
+    # Missing device token
+    res = engine.submit_checkin("", "loc_01", "stocked", ["sanitary_pads"])
+    assert res["status"] == "error"
+    assert "Missing device token" in res["message"]
+
+    # Invalid product non-allowlisted
+    res_bad_prod = engine.submit_checkin("token_sec_1", "loc_01", "stocked", ["invalid_product_script"])
+    assert res_bad_prod["status"] == "error"
+    assert "Invalid products" in res_bad_prod["message"]
+
+    # Sanitize note (strip script tags)
+    clean = sanitize_note("<script>alert('xss')</script>Hello World")
+    assert "<script>" not in clean
+    assert "Hello World" in clean
+    print("TEST F1/F3 PASSED: Access map token requirement, product allowlist, and note sanitization verified")
+
 if __name__ == "__main__":
     test_pdf_is_real_binary_pdf()
     test_baseline_metrics_reproducibility()
@@ -202,4 +268,7 @@ if __name__ == "__main__":
     test_A2_A4_sqlite_privacy_engine()
     test_A3_consent_enforcement()
     test_A5_model_path_safety()
+    test_B1_B2_perimenopause_honest_uncertainty()
+    test_D1_D2_D3_rules_urgency_and_r2_urgent()
+    test_F1_F3_map_security()
     print("\nALL REGRESSION TESTS COMPLETED SUCCESSFULLY!")

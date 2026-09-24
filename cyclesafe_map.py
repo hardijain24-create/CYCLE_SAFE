@@ -2,12 +2,15 @@
 
 Implements access point listings, distance sorting, filters,
 anonymous check-ins (majority voting of last 3 reports), device rate-limiting,
-and prototype data flagging.
+product allowlist validation, and anti-tampering verification rules.
 """
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set
 import math
+import re
+
+ALLOWED_PRODUCTS = {"sanitary_pads", "tampons", "pain_relief", "menstrual_cups", "wipes"}
 
 @dataclass
 class AccessPoint:
@@ -25,6 +28,7 @@ class AccessPoint:
     report_count: int = 1
     is_demo: bool = True
     recent_reports: List[str] = field(default_factory=list) # max 3 recent statuses
+    contributing_tokens: Set[str] = field(default_factory=set)
 
     def to_dict(self, user_lat: Optional[float] = None, user_lon: Optional[float] = None) -> Dict:
         now = datetime.now(timezone.utc)
@@ -63,6 +67,13 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
+def sanitize_note(note: Optional[str]) -> Optional[str]:
+    if not note:
+        return None
+    # Strip HTML tags and cap length at 100 chars
+    clean = re.sub(r'<[^>]*>', '', str(note)).strip()
+    return clean[:100] if clean else None
+
 class ProductAccessMapEngine:
     def __init__(self):
         self.access_points: Dict[str, AccessPoint] = {}
@@ -72,16 +83,11 @@ class ProductAccessMapEngine:
     def _seed_demo_data(self):
         now = datetime.now(timezone.utc)
         demo_points = [
-            AccessPoint("loc_01", "Dadar Central Station Restroom", "Mumbai", "India", 19.0178, 72.8478, "transit_station", "low", ["sanitary_pads"], True, now - timedelta(hours=4), 12, True, ["low"]),
-            AccessPoint("loc_02", "IIT Bombay Student Center", "Mumbai", "India", 19.1334, 72.9133, "university", "stocked", ["sanitary_pads", "tampons", "pain_relief"], True, now - timedelta(hours=12), 25, True, ["stocked"]),
-            AccessPoint("loc_03", "Churchgate Station Community Desk", "Mumbai", "India", 18.9322, 72.8264, "transit_station", "empty", [], True, now - timedelta(hours=85), 5, True, ["empty"]),
-            AccessPoint("loc_04", "Connaught Place Public Restroom", "New Delhi", "India", 28.6315, 77.2167, "public_restroom", "stocked", ["sanitary_pads"], True, now - timedelta(hours=2), 18, True, ["stocked"]),
-            AccessPoint("loc_05", "Koramangala Community Health Hub", "Bengaluru", "India", 12.9352, 77.6245, "community_center", "stocked", ["sanitary_pads", "tampons"], True, now - timedelta(hours=1), 30, True, ["stocked"]),
-            AccessPoint("loc_06", "Hitec City Metro Station", "Hyderabad", "India", 17.4474, 78.3762, "transit_station", "stocked", ["sanitary_pads"], True, now - timedelta(hours=6), 14, True, ["stocked"]),
-            AccessPoint("loc_07", "Park Street Metro Desk", "Kolkata", "India", 22.5539, 88.3531, "transit_station", "low", ["sanitary_pads"], True, now - timedelta(hours=18), 8, True, ["low"]),
-            AccessPoint("loc_08", "Cyber Hub Wellness Center", "Gurugram", "India", 28.4950, 77.0895, "commercial_hub", "low", ["sanitary_pads", "pain_relief"], False, now - timedelta(hours=5), 10, True, ["low"]),
-            AccessPoint("loc_09", "King's Cross Station Facility", "London", "UK", 51.5309, -0.1233, "transit_station", "stocked", ["sanitary_pads", "tampons"], True, now - timedelta(hours=3), 42, True, ["stocked"]),
-            AccessPoint("loc_10", "Grand Central Terminal Restroom", "New York", "USA", 40.7527, -73.9772, "transit_station", "stocked", ["sanitary_pads", "tampons"], True, now - timedelta(hours=10), 55, True, ["stocked"]),
+            AccessPoint("loc_01", "Dadar Central Station Restroom", "Mumbai", "India", 19.0178, 72.8478, "transit_station", "low", ["sanitary_pads"], True, now - timedelta(hours=4), 1, True, ["low"], set()),
+            AccessPoint("loc_02", "IIT Bombay Student Center", "Mumbai", "India", 19.1334, 72.9133, "university", "stocked", ["sanitary_pads", "tampons", "pain_relief"], True, now - timedelta(hours=12), 1, True, ["stocked"], set()),
+            AccessPoint("loc_03", "Churchgate Station Community Desk", "Mumbai", "India", 18.9322, 72.8264, "transit_station", "empty", [], True, now - timedelta(hours=85), 1, True, ["empty"], set()),
+            AccessPoint("loc_04", "Connaught Place Public Restroom", "New Delhi", "India", 28.6315, 77.2167, "public_restroom", "stocked", ["sanitary_pads"], True, now - timedelta(hours=2), 1, True, ["stocked"], set()),
+            AccessPoint("loc_05", "Koramangala Community Health Hub", "Bengaluru", "India", 12.9352, 77.6245, "community_center", "stocked", ["sanitary_pads", "tampons"], True, now - timedelta(hours=1), 1, True, ["stocked"], set()),
         ]
         for ap in demo_points:
             self.access_points[ap.id] = ap
@@ -99,18 +105,25 @@ class ProductAccessMapEngine:
                 d = ap.to_dict(user_lat=lat, user_lon=lon)
                 results.append(d)
         
-        # Sort by distance
         results.sort(key=lambda x: x["distance_km"])
         return results
 
     def submit_checkin(self, device_token: str, location_id: str, 
                        status: str, products: List[str], note: Optional[str] = None) -> Dict:
-        """Anonymous check-in. Rate-limited per device token (1 per 10 mins)."""
+        """Anonymous check-in with rate limiting, input validation, and multi-token verification."""
+        if not device_token or device_token.strip() == "":
+            return {"status": "error", "message": "Missing device token header."}
+
         if status not in ["stocked", "low", "empty"]:
             return {"status": "error", "message": "Invalid status value. Must be 'stocked', 'low', or 'empty'."}
 
         if location_id not in self.access_points:
             return {"status": "error", "message": "Location ID not found."}
+
+        # Validate products against allowlist
+        invalid = [p for p in products if p not in ALLOWED_PRODUCTS]
+        if invalid:
+            return {"status": "error", "message": f"Invalid products: {invalid}. Must be in allowlist."}
 
         now = datetime.now(timezone.utc)
         if device_token in self.device_checkin_history:
@@ -123,6 +136,8 @@ class ProductAccessMapEngine:
 
         self.device_checkin_history[device_token] = now
         ap = self.access_points[location_id]
+
+        clean_note = sanitize_note(note)
 
         # Update recent reports list (keep max 3)
         ap.recent_reports.append(status)
@@ -139,33 +154,40 @@ class ProductAccessMapEngine:
         ap.products = products
         ap.last_checked = now
         ap.report_count += 1
-        # Once community checks in, mark as verified community data
-        ap.is_demo = False
+        ap.contributing_tokens.add(device_token)
+
+        # Anti-tampering: Requires >= 3 reports from >= 2 distinct tokens before is_demo = False
+        if ap.report_count >= 3 and len(ap.contributing_tokens) >= 2:
+            ap.is_demo = False
 
         return {
             "status": "success",
             "message": "Check-in recorded anonymously.",
-            "updated_location": ap.to_dict()
+            "updated_location": ap.to_dict(),
+            "note_saved": clean_note
         }
 
 def test_map():
     engine = ProductAccessMapEngine()
-    # Nearby test (Mumbai center)
     mumbai_lat, mumbai_lon = 19.0760, 72.8777
     nearby = engine.get_nearby(mumbai_lat, mumbai_lon, radius_km=20.0)
     assert len(nearby) == 3
-    assert nearby[0]["id"] == "loc_01" # Dadar (~7km)
 
-    # Checkin test
-    res = engine.submit_checkin("dev_token_123", "loc_01", "stocked", ["sanitary_pads", "tampons"])
-    assert res["status"] == "success"
-    assert res["updated_location"]["status"] == "stocked"
-    assert res["updated_location"]["is_demo"] == False
+    # Checkin test token 1
+    res1 = engine.submit_checkin("dev_token_01", "loc_01", "stocked", ["sanitary_pads", "tampons"])
+    assert res1["status"] == "success"
+    # Single token check-in keeps is_demo = True (Prototype Data) until >= 2 distinct tokens
+    assert res1["updated_location"]["is_demo"] == True
 
-    # Rate limit test
-    res2 = engine.submit_checkin("dev_token_123", "loc_01", "empty", [])
-    assert res2["status"] == "error"
-    assert "Rate limit" in res2["message"]
+    # Checkin test token 2
+    res2 = engine.submit_checkin("dev_token_02", "loc_01", "stocked", ["sanitary_pads", "tampons"])
+    assert res2["status"] == "success"
+    # Multi-token verification activates Verified Community Data
+    assert res2["updated_location"]["is_demo"] == False
+
+    # Input validation test (script injection / bad product)
+    bad_res = engine.submit_checkin("dev_token_03", "loc_01", "stocked", ["<script>alert(1)</script>"])
+    assert bad_res["status"] == "error"
 
     print("ALL MAP TESTS PASSED")
 

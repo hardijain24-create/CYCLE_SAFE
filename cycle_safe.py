@@ -1053,6 +1053,46 @@ def train_cyclesafe_V4(
         alpha=0.10,
     )
 
+    # --- Mondrian per-group conformal radii (calibrated on dev OOF) ---
+    oof_errors = np.abs(oof["actual"].to_numpy() - selected_oof_pred)
+    conformal_radii = {}
+    cv_tertile_cutoffs = None
+    if "cv_5" in oof.columns:
+        # Use data-driven tertile boundaries
+        cv_vals = oof["cv_5"].dropna()
+        try:
+            oof["_cv_tertile"], cv_bins = pd.qcut(cv_vals, q=3, labels=["low", "medium", "high"], retbins=True)
+            cv_tertile_cutoffs = [float(cv_bins[1]), float(cv_bins[2])]  # [low/med boundary, med/high boundary]
+        except ValueError:
+            cv_tertile_cutoffs = [0.08, 0.16]
+            oof["_cv_tertile"] = pd.cut(
+                oof["cv_5"],
+                bins=[-np.inf, cv_tertile_cutoffs[0], cv_tertile_cutoffs[1], np.inf],
+                labels=["low", "medium", "high"]
+            )
+
+        for g_label in ["low", "medium", "high"]:
+            g_mask = oof["_cv_tertile"] == g_label
+            g_errors = oof_errors[g_mask]
+            n = len(g_errors)
+            if n < 30:
+                # Merge into global radii if group too small
+                g_errors = oof_errors
+                n = len(g_errors)
+            q80 = min(1.0, np.ceil((n + 1) * 0.80) / n)
+            q90 = min(1.0, np.ceil((n + 1) * 0.90) / n)
+            conformal_radii[g_label] = {
+                "radius80": float(np.quantile(g_errors, q80)),
+                "radius90": float(np.quantile(g_errors, q90)),
+                "n": int(n)
+            }
+        oof.drop(columns=["_cv_tertile"], inplace=True, errors="ignore")
+
+        print("\nMONDRIAN CONFORMAL RADII (per cv_tertile):")
+        for g, r in conformal_radii.items():
+            print(f"  {g}: r80={r['radius80']:.2f}, r90={r['radius90']:.2f} (n={r['n']})")
+        print(f"  cv_tertile cutoffs: {cv_tertile_cutoffs}")
+
     final_model = None
     final_ridge_alpha = 10.0
     final_ridge_tuning = pd.DataFrame()
@@ -1152,6 +1192,8 @@ def train_cyclesafe_V4(
         "safe_context_columns": SAFE_CONTEXT_COLUMNS,
         "radius80_days": radius80,
         "radius90_days": radius90,
+        "conformal_radii": conformal_radii,
+        "cv_tertile_cutoffs": cv_tertile_cutoffs,
         "min_cycle_length": MIN_CYCLE_LENGTH,
         "max_cycle_length": MAX_CYCLE_LENGTH,
         "min_history_for_model": MIN_HISTORY_FOR_MODEL,
@@ -1766,13 +1808,13 @@ def run_enhanced_personalization_gate(cyclesafe_result):
         if pd.notna(ps):
             model_agree = 0.25 if ps < 1.0 else (0.15 if ps < 2.0 else 0)
             
-        data_comp = 0.25 # simplified
+        # no constant data_completeness; rescale the 3 real components to 0-1
+        overall = (hist_conf + pattern_stab + model_agree) / 0.75
         return pd.Series({
             "history_confidence": hist_conf,
             "pattern_stability": pattern_stab,
             "model_agreement": model_agree,
-            "data_completeness": data_comp,
-            "overall_evidence_strength": min(overall, 1.0)
+            "overall_evidence_strength": min(overall, 1.0),
         })
         
     confidence_df = evaluation.apply(calc_confidence_components, axis=1)

@@ -52,9 +52,15 @@ class CycleSafePrivacyEngine:
                     purposes_json TEXT NOT NULL,
                     given_at TEXT NOT NULL,
                     active INTEGER NOT NULL,
-                    withdrawn_at TEXT
+                    withdrawn_at TEXT,
+                    token_hash TEXT
                 )
             """)
+            # Migration: add token_hash column if it doesn't exist (for existing DBs)
+            try:
+                cursor.execute("ALTER TABLE consent ADD COLUMN token_hash TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS cycle_logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,7 +83,7 @@ class CycleSafePrivacyEngine:
         finally:
             conn.close()
 
-    def register_consent(self, user_id: str, purposes: Optional[List[str]] = None) -> ConsentRecord:
+    def register_consent(self, user_id: str, purposes: Optional[List[str]] = None, token_hash: Optional[str] = None) -> ConsentRecord:
         if purposes is None:
             purposes = [
                 "Cycle length tracking and forecasting",
@@ -89,9 +95,9 @@ class CycleSafePrivacyEngine:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT OR REPLACE INTO consent (user_id, purposes_json, given_at, active, withdrawn_at)
-                VALUES (?, ?, ?, 1, NULL)
-            """, (user_id, json.dumps(purposes), record.given_at))
+                INSERT OR REPLACE INTO consent (user_id, purposes_json, given_at, active, withdrawn_at, token_hash)
+                VALUES (?, ?, ?, 1, NULL, ?)
+            """, (user_id, json.dumps(purposes), record.given_at, token_hash))
             conn.commit()
         return record
 
@@ -148,7 +154,8 @@ class CycleSafePrivacyEngine:
             raise PermissionError(f"User '{user_id}' does not have an active consent record. Data logging blocked.")
 
         cycle_len = float(cycle_data.get("cycle_length_days", 28.0))
-        log_date = str(cycle_data.get("log_date", datetime.now(timezone.utc).strftime("%Y-%m-%d")))
+        raw_log_date = cycle_data.get("log_date")
+        log_date = str(raw_log_date) if raw_log_date else datetime.now(timezone.utc).strftime("%Y-%m-%d")
         details = json.dumps({k: v for k, v in cycle_data.items() if k not in ["cycle_length_days", "log_date"]})
 
         with self._get_connection() as conn:

@@ -1,36 +1,20 @@
-"""Authentication and token verification for CycleSafe API."""
+"""Authentication and token verification for CycleSafe API.
 
-import os
-import hmac
+Note: Token generation and verification are now handled directly in main.py
+using random tokens with SHA-256 hashing. This module is kept for reference
+but the primary auth flow is in cyclesafe.api.main.
+"""
+
 import hashlib
-from typing import Optional, Tuple
+import secrets
+from typing import Optional
 
-SECRET_KEY = os.environ.get("CYCLESAFE_SECRET", "cyclesafe-secret-key-2026-privacy-first").encode('utf-8')
 
-def generate_user_token(user_id: str) -> str:
-    """Generates an HMAC-SHA256 bearer token for the given user_id."""
-    h = hmac.new(SECRET_KEY, user_id.encode('utf-8'), hashlib.sha256)
-    return f"cs_{h.hexdigest()[:32]}"
+def hash_token(token: str) -> str:
+    """One-way SHA-256 hash of a bearer token for storage."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
-def verify_token(user_id: str, authorization: Optional[str]) -> Tuple[bool, int, str]:
-    """
-    Verifies Bearer token against target user_id.
-    Returns (is_valid, status_code, error_message).
-    - 401 if header is missing or token invalid
-    - 403 if token belongs to a different user
-    """
-    if not authorization or not authorization.startswith("Bearer "):
-        return False, 401, "Missing or invalid Authorization header. Expected 'Bearer <token>'."
 
-    token = authorization.replace("Bearer ", "").strip()
-    expected_token = generate_user_token(user_id)
-
-    if hmac.compare_digest(token, expected_token):
-        return True, 200, "OK"
-
-    # Check if token belongs to any valid user by comparing with expected token
-    # If token format is valid cs_ prefix but doesn't match expected user_id -> 403
-    if token.startswith("cs_"):
-        return False, 403, "Forbidden: Authorization token does not match requested user_id."
-
-    return False, 401, "Unauthorized: Invalid token format."
+def generate_random_token() -> str:
+    """Generate a cryptographically random bearer token (64-char hex)."""
+    return secrets.token_hex(32)

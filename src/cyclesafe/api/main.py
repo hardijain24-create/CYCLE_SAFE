@@ -7,7 +7,7 @@ PDF doctor report generation, product access map, and privacy data management.
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import os
-import hmac
+import secrets
 import hashlib
 
 from fastapi import FastAPI, HTTPException, Header, Response, Request, Depends, status
@@ -21,19 +21,36 @@ from cyclesafe.forecast import forecast_next_cycle
 privacy_engine = CycleSafePrivacyEngine()
 map_engine = ProductAccessMapEngine()
 
-SECRET_KEY = os.environ.get("CYCLESAFE_SECRET_KEY", "cyclesafe_default_secret_key_2026")
 
-def generate_user_token(user_id: str) -> str:
-    """Generates an HMAC-SHA256 authenticated token for a given user_id."""
-    return hmac.new(SECRET_KEY.encode("utf-8"), user_id.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
+def _hash_token(token: str) -> str:
+    """One-way SHA-256 hash of a bearer token for storage."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
 
 def verify_token_and_user(user_id: str, authorization: Optional[str]) -> bool:
-    """Verifies that Authorization header contains valid token matching user_id."""
+    """Verifies that Authorization header contains a valid token matching user_id.
+    
+    Looks up the stored token_hash for the user and compares against the hash
+    of the presented bearer token.
+    """
     if not authorization:
         return False
     token = authorization.replace("Bearer ", "").strip()
-    expected = generate_user_token(user_id)
-    return hmac.compare_digest(token, expected)
+    if not token:
+        return False
+    
+    consent = privacy_engine.get_consent(user_id)
+    if not consent:
+        return False
+    
+    stored_hash = consent.get("token_hash")
+    if not stored_hash:
+        return False
+
+    presented_hash = _hash_token(token)
+    # Constant-time comparison
+    return secrets.compare_digest(stored_hash, presented_hash)
+
 
 # Pydantic Schemas
 class CycleLogInput(BaseModel):
@@ -79,16 +96,32 @@ def check_auth(user_id: str, authorization: Optional[str]):
 
 @app.post("/consent")
 def register_consent(user_id: str):
-    """Registers active consent for user and returns authenticated token."""
+    """Registers active consent for a NEW user and returns a random bearer token.
+    
+    If the user already has an active consent record, returns 409 Conflict.
+    The plaintext token is shown exactly once; only its SHA-256 hash is stored.
+    """
     if not user_id or not user_id.strip():
         raise HTTPException(status_code=400, detail="User ID required.")
-    privacy_engine.register_consent(user_id)
-    token = generate_user_token(user_id)
+    
+    # Check if user already exists with active consent
+    existing = privacy_engine.get_consent(user_id)
+    if existing and existing.get("active"):
+        raise HTTPException(
+            status_code=409,
+            detail="User already registered. Token was shown at registration and cannot be retrieved again."
+        )
+    
+    # Generate a cryptographically random token
+    token = secrets.token_hex(32)  # 64-char hex string
+    token_hash = _hash_token(token)
+    
+    privacy_engine.register_consent(user_id, token_hash=token_hash)
     return {
         "status": "success",
         "user_id": user_id,
         "token": token,
-        "message": "Consent registered successfully."
+        "message": "Consent registered. Save your token securely — it will not be shown again."
     }
 
 @app.post("/consent/withdraw")

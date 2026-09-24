@@ -2712,32 +2712,17 @@ meno_report = build_winning_doctor_report(user_meno, meno_baseline, meno_pattern
 os.makedirs('models', exist_ok=True)
 
 # ======================================================================
-# PRIVACY & PDF REPORT ENGINE
-# ======================================================================
+from cyclesafe_privacy import CycleSafePrivacyEngine
 
-class CycleSafePrivacyEngine:
-    """CycleSafe Data Governance & Privacy Engine: Consent, Export, Delete."""
-    def __init__(self, user_id: str):
-        self.user_id = user_id
-        self.consent_given = True
-        self.consent_timestamp = "2026-09-24T10:00:00Z"
-
-    def revoke_consent(self):
-        self.consent_given = False
-        return {"status": "success", "user_id": self.user_id, "consent_given": False, "message": "All non-essential data processing halted."}
-
-    def export_user_data(self, timeline) -> str:
-        data = {
-            "user_id": self.user_id,
-            "exported_at": "2026-09-24T10:00:00Z",
-            "consent_status": self.consent_given,
-            "cycles": [{"start": str(c.start_date), "length": c.cycle_length_days} for c in getattr(timeline, "cycles", [])],
-            "symptoms": [{"date": str(s.record_date), "symptom": s.symptom, "severity": getattr(s.severity, "name", str(s.severity))} for s in getattr(timeline, "symptoms", [])]
-        }
-        return json.dumps(data, indent=2)
-
-    def delete_user_data(self) -> Dict[str, str]:
-        return {"status": "deleted", "user_id": self.user_id, "records_purged": 100, "message": "All user records and models purged per GDPR/DPDP right to be forgotten."}
+def load_safe_artifact(artifact_path: str = ARTIFACT_PATH):
+    """Safely loads model artifact only from the configured models/ path."""
+    norm_path = os.path.normpath(artifact_path)
+    if not (norm_path.startswith("models") or norm_path.startswith(os.path.normpath("models"))):
+        raise ValueError(f"Security error: Refusing to load model artifact from untrusted path '{artifact_path}'. Must be in models/.")
+    if not os.path.exists(artifact_path):
+        raise FileNotFoundError(f"Model artifact not found at '{artifact_path}'")
+    import joblib
+    return joblib.load(artifact_path)
 
 
 def generate_doctor_report_pdf(report: dict, output_path: str):

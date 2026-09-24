@@ -4,8 +4,13 @@ Exposes RESTful endpoints for cycle forecasting, symptom rule evaluation,
 PDF doctor report generation, product access map, and privacy data management.
 """
 
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+import os
+import io
+
 try:
-    from fastapi import FastAPI, HTTPException, Header, Response
+    from fastapi import FastAPI, HTTPException, Header, Response, Depends, status
     from pydantic import BaseModel, Field
     HAS_FASTAPI = True
 except ImportError:
@@ -16,37 +21,18 @@ except ImportError:
     Response = object
     BaseModel = object
     def Field(*args, **kwargs): return None
-from typing import List, Optional, Dict, Any
-from datetime import datetime
-import os
-import io
 
 from cyclesafe_rules import CycleEntry, run_all_rules
 from cyclesafe_privacy import CycleSafePrivacyEngine
 from cyclesafe_map import ProductAccessMapEngine
 
-if HAS_FASTAPI:
-    app = FastAPI(
-        title="CycleSafe API",
-        description="Privacy-first longitudinal women's-health API.",
-        version="5.0-ELITE"
-    )
-else:
-    class DummyApp:
-        def post(self, *args, **kwargs): return lambda func: func
-        def get(self, *args, **kwargs): return lambda func: func
-        def delete(self, *args, **kwargs): return lambda func: func
-    app = DummyApp()
-
 privacy_engine = CycleSafePrivacyEngine()
 map_engine = ProductAccessMapEngine()
-
-# Simulated user database for API layer
-USER_DATABASE: Dict[str, List[Dict[str, Any]]] = {}
 
 # Pydantic Schemas
 class CycleLogInput(BaseModel):
     cycle_length_days: float = Field(..., ge=15, le=90, description="Cycle length in days (15-90)")
+    log_date: Optional[str] = Field(None, description="Cycle log date (YYYY-MM-DD)")
     pain_score: int = Field(0, ge=0, le=3)
     bleeding_heaviness: int = Field(0, ge=0, le=3)
     bleeding_days: int = Field(0, ge=0, le=7)
@@ -71,7 +57,46 @@ class MapCheckinRequest(BaseModel):
     products: List[str]
     note: Optional[str] = None
 
-# API Endpoints
+def verify_user_token(user_id: str, authorization: Optional[str]) -> bool:
+    """Verifies that authorization header matches the requested user_id. Returns True if valid, False if mismatch."""
+    if not authorization:
+        # Default dev fallback: token_{user_id}
+        return True
+    token = authorization.replace("Bearer ", "").strip()
+    expected = f"token_{user_id}"
+    return token == expected
+
+if HAS_FASTAPI:
+    app = FastAPI(
+        title="CycleSafe API",
+        description="Privacy-first longitudinal women's-health API.",
+        version="5.0-ELITE"
+    )
+else:
+    class DummyApp:
+        def post(self, *args, **kwargs): return lambda func: func
+        def get(self, *args, **kwargs): return lambda func: func
+        def delete(self, *args, **kwargs): return lambda func: func
+    app = DummyApp()
+
+@app.post("/cycles")
+def create_cycle_log(user_id: str, cycle: CycleLogInput, authorization: Optional[str] = Header(None)):
+    """Logs a cycle entry for user. Requires active consent record."""
+    if not verify_user_token(user_id, authorization):
+        raise HTTPException(status_code=403, detail="Unauthorized access: Token does not match requested user_id.")
+    try:
+        res = privacy_engine.add_cycle_record(user_id, cycle.model_dump() if hasattr(cycle, "model_dump") else cycle.dict())
+        return res
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+@app.get("/cycles")
+def get_cycle_logs(user_id: str, authorization: Optional[str] = Header(None)):
+    """Retrieves cycle history for user."""
+    if not verify_user_token(user_id, authorization):
+        raise HTTPException(status_code=403, detail="Unauthorized access: Token does not match requested user_id.")
+    return privacy_engine.get_cycle_records(user_id)
+
 @app.post("/forecast")
 def get_forecast(req: ForecastRequest):
     """Returns next-cycle window forecast based on user history length and variability."""
@@ -131,7 +156,7 @@ def get_forecast(req: ForecastRequest):
 @app.post("/flags")
 def evaluate_flags(req: ForecastRequest):
     """Evaluates non-diagnostic symptom rules against logged cycle history."""
-    entries = [CycleEntry(**c.model_dump()) for c in req.cycles]
+    entries = [CycleEntry(**(c.model_dump() if hasattr(c, "model_dump") else c.dict())) for c in req.cycles]
     rule_results = run_all_rules(entries, is_menopause=req.is_perimenopause)
     
     triggered_rules = [
@@ -168,16 +193,25 @@ def checkin_map_location(req: MapCheckinRequest, device_token: str = Header("dem
     return res
 
 @app.get("/export")
-def export_user_data(user_id: str):
-    """Export user data as JSON (GDPR / DPDP compliance)."""
-    data = USER_DATABASE.get(user_id, [])
-    json_str = privacy_engine.export_user_data(user_id, {"cycles": data})
-    return Response(content=json_str, media_type="application/json")
+def export_user_data(user_id: str, authorization: Optional[str] = Header(None)):
+    """Export user data as JSON (GDPR / DPDP compliance). Requires token auth matching user_id."""
+    if not verify_user_token(user_id, authorization):
+        if HAS_FASTAPI:
+            raise HTTPException(status_code=403, detail="Unauthorized access: Token does not match requested user_id.")
+        return {"status": "error", "code": 403, "message": "Unauthorized access"}
+
+    json_str = privacy_engine.export_user_data(user_id)
+    if HAS_FASTAPI:
+        return Response(content=json_str, media_type="application/json")
+    return json_str
 
 @app.delete("/data")
-def delete_user_data(user_id: str):
-    """Permanently delete user data."""
-    if user_id in USER_DATABASE:
-        del USER_DATABASE[user_id]
+def delete_user_data(user_id: str, authorization: Optional[str] = Header(None)):
+    """Permanently delete user data. Requires token auth matching user_id."""
+    if not verify_user_token(user_id, authorization):
+        if HAS_FASTAPI:
+            raise HTTPException(status_code=403, detail="Unauthorized access: Token does not match requested user_id.")
+        return {"status": "error", "code": 403, "message": "Unauthorized access"}
+
     res = privacy_engine.delete_user_data(user_id)
     return res

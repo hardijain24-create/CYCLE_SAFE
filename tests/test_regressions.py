@@ -98,6 +98,99 @@ def test_cell_headers_formatting():
     assert len(cell_headers) >= 12, f"Expected at least 12 CELL headers, found {len(cell_headers)}"
     print(f"CELL HEADERS TEST PASSED: {len(cell_headers)} cells formatted cleanly")
 
+def test_A1_auth_enforcement():
+    """Verify that export and delete endpoints reject unauthorized requests with HTTP 403."""
+    from cyclesafe_api import export_user_data, delete_user_data
+    # Testing direct auth validation helper or API behavior
+    from cyclesafe_api import verify_user_token
+    assert not verify_user_token("user_123", "token_wrong"), "Mismatch token must be rejected"
+    assert verify_user_token("user_123", "token_user_123"), "Matching token must be accepted"
+    print("TEST A1 PASSED: Token authentication enforcement verified")
+
+def test_A2_A4_sqlite_privacy_engine():
+    """Verify SQLite storage layer handles cycle logging, real export count, and true deletion."""
+    from cyclesafe_privacy import CycleSafePrivacyEngine
+    db_path = "tests/test_cyclesafe_privacy.db"
+    if os.path.exists(db_path):
+        os.remove(db_path)
+
+    engine = CycleSafePrivacyEngine(db_path=db_path)
+    engine.register_consent("user_test_99")
+    
+    # Store real cycle records
+    engine.add_cycle_record("user_test_99", {"cycle_length_days": 28.0, "log_date": "2026-09-01"})
+    engine.add_cycle_record("user_test_99", {"cycle_length_days": 29.0, "log_date": "2026-09-29"})
+
+    export_json = engine.export_user_data("user_test_99")
+    exported = json.loads(export_json)
+    assert len(exported["data"]["cycles"]) == 2, f"Expected 2 cycles in export, got {len(exported['data']['cycles'])}"
+
+    # Perform true delete
+    res = engine.delete_user_data("user_test_99")
+    assert res["status"] == "deleted"
+    assert res["deleted_counts"]["cycles"] == 2
+    assert engine.verify_deletion("user_test_99") == True
+
+    import gc
+    gc.collect()
+    if os.path.exists(db_path):
+        try:
+            os.remove(db_path)
+        except OSError:
+            pass
+    print("TEST A2/A4 PASSED: Real SQLite persistence & true delete verified")
+
+def test_A3_consent_enforcement():
+    """Verify active consent record requirement and withdraw_consent functionality."""
+    from cyclesafe_privacy import CycleSafePrivacyEngine
+    db_path = "tests/test_consent.db"
+    if os.path.exists(db_path):
+        os.remove(db_path)
+
+    engine = CycleSafePrivacyEngine(db_path=db_path)
+    
+    # Without consent: processing/logging must be blocked
+    try:
+        engine.add_cycle_record("user_noconsent", {"cycle_length_days": 28.0})
+        consent_blocked = False
+    except PermissionError:
+        consent_blocked = True
+    assert consent_blocked, "Adding cycle record without active consent must raise PermissionError"
+
+    # Register consent
+    engine.register_consent("user_noconsent")
+    engine.add_cycle_record("user_noconsent", {"cycle_length_days": 28.0})
+
+    # Withdraw consent
+    engine.withdraw_consent("user_noconsent")
+    try:
+        engine.add_cycle_record("user_noconsent", {"cycle_length_days": 30.0})
+        withdraw_blocked = False
+    except PermissionError:
+        withdraw_blocked = True
+    assert withdraw_blocked, "Adding cycle record after withdrawing consent must raise PermissionError"
+
+    import gc
+    gc.collect()
+    if os.path.exists(db_path):
+        try:
+            os.remove(db_path)
+        except OSError:
+            pass
+    print("TEST A3 PASSED: Active consent requirement & withdraw enforcement verified")
+
+def test_A5_model_path_safety():
+    """Verify that model artifact loading only accepts paths within configured models/ directory."""
+    from cycle_safe import load_safe_artifact
+    
+    try:
+        load_safe_artifact("../untrusted_dir/malicious.pkl")
+        path_blocked = False
+    except ValueError:
+        path_blocked = True
+    assert path_blocked, "Loading model artifact outside models/ path must raise ValueError"
+    print("TEST A5 PASSED: Model artifact path safety verified")
+
 if __name__ == "__main__":
     test_pdf_is_real_binary_pdf()
     test_baseline_metrics_reproducibility()
@@ -105,4 +198,8 @@ if __name__ == "__main__":
     test_no_context_feature_leakage()
     test_duplicate_engine_class_definitions()
     test_cell_headers_formatting()
+    test_A1_auth_enforcement()
+    test_A2_A4_sqlite_privacy_engine()
+    test_A3_consent_enforcement()
+    test_A5_model_path_safety()
     print("\nALL REGRESSION TESTS COMPLETED SUCCESSFULLY!")

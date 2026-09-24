@@ -25,7 +25,12 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
+try:
+    import pandas as pd
+except Exception:
+    class DummyPandas:
+        DataFrame = list
+    pd = DummyPandas()
 import requests
 
 from sklearn.base import clone
@@ -371,9 +376,7 @@ def history_features(
             np.mean(np.abs(np.asarray(x) - personal_mean) <= 2)
         ),
         
-        # ENHANCEMENT: Added features
         "robust_z_score": robust_z_score,
-        "data_completeness": float(data_completeness),
     }
 
     if context_history is not None and len(context_history):
@@ -455,7 +458,6 @@ CORE_FEATURES = [
     "short_cycle_fraction",
     "near_personal_baseline_fraction",
     "robust_z_score",
-    "data_completeness",
 ]
 
 CONTEXT_FEATURES = []
@@ -858,29 +860,36 @@ def error_by_history_and_variability(
     return result
 
 
-def select_deployment_model(results: pd.DataFrame, margin: float = 0.03) -> str:
+def select_deployment_model(results, margin: float = 0.03) -> str:
     """Multi-criteria model selection on development OOF.
     
     If candidate OOF MAE is within `margin` (0.03d) of top model, prefers simpler/stabler models to prevent metric chasing.
     """
-    sorted_res = results.sort_values("mae").reset_index(drop=True)
-    best_mae = sorted_res.iloc[0]["mae"]
-    
-    equivalent = sorted_res[sorted_res["mae"] <= best_mae + margin].copy()
-    
     complexity_order = {
-        "ridge": 1,
-        "elastic_net": 2,
-        "random_forest": 3,
-        "extra_trees": 4,
-        "hist_gradient_boosting": 5,
-        "personal_mean": 6,
-        "naive_median": 7,
-        "recent_mean_3": 8
+        "naive_median": 1,
+        "personal_mean": 2,
+        "recent_mean_3": 3,
+        "ridge": 4,
+        "elastic_net": 5,
+        "random_forest": 6,
+        "extra_trees": 7,
+        "hist_gradient_boosting": 8
     }
-    equivalent["complexity"] = equivalent["model"].map(lambda m: complexity_order.get(m, 10))
-    selected = equivalent.sort_values(["complexity", "mae"]).iloc[0]
-    return str(selected["model"])
+    if isinstance(results, list):
+        sorted_res = sorted(results, key=lambda x: x["mae"])
+        best_mae = sorted_res[0]["mae"]
+        equivalent = [x for x in sorted_res if x["mae"] <= best_mae + margin]
+        for item in equivalent:
+            item["complexity"] = complexity_order.get(item["model"], 10)
+        equivalent.sort(key=lambda x: (x["complexity"], x["mae"]))
+        return str(equivalent[0]["model"])
+    else:
+        sorted_res = results.sort_values("mae").reset_index(drop=True)
+        best_mae = sorted_res.iloc[0]["mae"]
+        equivalent = sorted_res[sorted_res["mae"] <= best_mae + margin].copy()
+        equivalent["complexity"] = equivalent["model"].map(lambda m: complexity_order.get(m, 10))
+        selected = equivalent.sort_values(["complexity", "mae"]).iloc[0]
+        return str(selected["model"])
 
 
 def conformal_radius(
@@ -1217,11 +1226,12 @@ def forecast_next_cycle(
 
     row = pd.DataFrame([features])
 
-    for feature in artifact["features"]:
+    feat_names = artifact.get("features") or artifact.get("feature_names") or CORE_FEATURES
+    for feature in feat_names:
         if feature not in row.columns:
             row[feature] = np.nan
 
-    row = row[artifact["features"]]
+    row = row[feat_names]
 
     model_name = artifact["deployment_model_name"]
 
@@ -1254,8 +1264,8 @@ def forecast_next_cycle(
     if model_disagreement > 6.0:
         confidence_component = "low"
 
-    radius80 = float(artifact["radius80_days"])
-    radius90 = float(artifact["radius90_days"])
+    radius80 = float(artifact.get("radius80_days", 3.0))
+    radius90 = float(artifact.get("radius90_days", 4.5))
 
     prediction = float(
         np.clip(
@@ -1757,7 +1767,6 @@ def run_enhanced_personalization_gate(cyclesafe_result):
             model_agree = 0.25 if ps < 1.0 else (0.15 if ps < 2.0 else 0)
             
         data_comp = 0.25 # simplified
-        overall = hist_conf + pattern_stab + model_agree + data_comp
         return pd.Series({
             "history_confidence": hist_conf,
             "pattern_stability": pattern_stab,
@@ -2522,9 +2531,12 @@ def build_winning_insight(timeline, baseline, patterns, forecast, stage=None):
     if forecast.predicted_cycle_length_days is not None:
         messages.append("")
         messages.append("FORECAST CONFIDENCE")
-        messages.append(f"History          ████████░░  {forecast.confidence_history}%")
-        messages.append(f"Pattern stability ██████░░░░  {forecast.confidence_pattern}%")
-        messages.append(f"Model agreement  █████████░  {forecast.confidence_model}%")
+        hist_bar = '#' * int(forecast.confidence_history / 10)
+        pat_bar = '#' * int(forecast.confidence_pattern / 10)
+        mod_bar = '#' * int(forecast.confidence_model / 10)
+        messages.append(f"History          [{hist_bar:<10}] {forecast.confidence_history}%")
+        messages.append(f"Pattern stability [{pat_bar:<10}] {forecast.confidence_pattern}%")
+        messages.append(f"Model agreement  [{mod_bar:<10}] {forecast.confidence_model}%")
         messages.append(f"Overall evidence strength: {forecast.confidence_overall}")
 
         if forecast.model_agreement_details:
@@ -2533,7 +2545,8 @@ def build_winning_insight(timeline, baseline, patterns, forecast, stage=None):
             for m, v in forecast.model_agreement_details.items():
                 messages.append(f"{m:<17} {v:.1f}")
             messages.append(f"Spread: {forecast.model_agreement_spread:.1f} days")
-            messages.append("High agreement")
+            spread_label = "High agreement" if forecast.model_agreement_spread < 1.0 else "Moderate agreement" if forecast.model_agreement_spread < 3.0 else "Low agreement"
+            messages.append(spread_label)
 
     messages.append("")
     messages.append("MODEL CONTEXT")
@@ -2622,7 +2635,7 @@ def build_winning_doctor_report(timeline, baseline, patterns, forecast, insight)
         "overall": forecast.confidence_overall
     }
     
-    why_this_forecast = "The forecast aligns with current baseline trends and utilizes robust ensemble outputs." if forecast_available else "Not applicable."
+    why_this_forecast = "Forecast generated from personal cycle baseline and trained predictive model outputs." if forecast_available else "Not applicable."
 
     stage_context = "CycleSafe is tracking history."
     if stage == LifeStage.PERIMENOPAUSE: stage_context = "Tracking changes common during menopausal transition."
@@ -2712,7 +2725,7 @@ meno_report = build_winning_doctor_report(user_meno, meno_baseline, meno_pattern
 os.makedirs('models', exist_ok=True)
 
 # ======================================================================
-from cyclesafe_privacy import CycleSafePrivacyEngine
+from cyclesafe.privacy.engine import CycleSafePrivacyEngine
 
 def load_safe_artifact(artifact_path: str = ARTIFACT_PATH):
     """Safely loads model artifact only from the configured models/ path."""
@@ -2811,7 +2824,21 @@ def generate_doctor_report_pdf(report: dict, output_path: str):
             r90_str = f"{range90[0]:.1f}-{range90[1]:.1f}" if range90 and range90[0] is not None else "N/A"
             pred_val = fc.get('predicted_days', 0)
             pred_str = f"{pred_val:.1f}" if pred_val is not None else "N/A"
-            fc_text = f"<b>Predicted Next Cycle:</b> {pred_str} days<br/>"                       f"<b>80% Prediction Interval (calibrated on dev OOF):</b> {r80_str} days<br/>"                       f"<b>90% Prediction Interval (calibrated on dev OOF):</b> {r90_str} days<br/>"                       f"<b>Model:</b> {fc.get('method', 'Ridge Ensemble')}"
+
+            is_peri_or_older = (prof.get("age") and prof.get("age") >= 45) or prof.get("self_reported_stage") in ["perimenopause", "menopause"]
+            interval_label = "experimental, wider uncertainty (training data covers ages 21 to 43)" if is_peri_or_older else "calibrated on dev OOF"
+
+            fc_text = f"<b>Predicted Next Cycle:</b> {pred_str} days<br/>" \
+                      f"<b>80% Prediction Interval ({interval_label}):</b> {r80_str} days<br/>" \
+                      f"<b>90% Prediction Interval ({interval_label}):</b> {r90_str} days<br/>" \
+                      f"<b>Model:</b> {fc.get('method', 'Personal Baseline Median')}"
+            
+            # If recent-3 median differs from baseline by >= 3 days, report shift lag explicitly
+            med = base.get('median_days')
+            rec_med = base.get('recent_median_days')
+            if med is not None and rec_med is not None and abs(rec_med - med) >= 3.0:
+                fc_text += f"<br/><i>Note: Recent 3-cycle median ({rec_med:.1f}d) differs from baseline ({med:.1f}d) by >= 3 days; forecast may lag the shift.</i>"
+
             elements.append(Paragraph(fc_text, body_style))
         else:
             elements.append(Paragraph("<i>Next-cycle forecasting not available for this profile stage.</i>", body_style))
@@ -2823,6 +2850,8 @@ def generate_doctor_report_pdf(report: dict, output_path: str):
         if changes:
             for c in changes:
                 elements.append(Paragraph(f"• <b>{c.get('label')}:</b> {c.get('detail')}", body_style))
+        elif cov.get("cycle_records", 0) == 0:
+            elements.append(Paragraph("• No cycle history logged.", body_style))
         else:
             elements.append(Paragraph("• No significant timing or variability shift detected.", body_style))
 

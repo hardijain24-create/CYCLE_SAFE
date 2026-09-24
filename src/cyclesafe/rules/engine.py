@@ -17,6 +17,8 @@ class CycleEntry:
     """One cycle record with optional symptom fields."""
     cycle_length_days: float
     start_date: Optional[date] = None
+    log_date: Optional[str] = None
+    last_period_date: Optional[str] = None
     pain_score: int = 0          # 0=none, 1=mild, 2=moderate, 3=severe
     bleeding_heaviness: int = 0  # 0=light, 1=normal, 2=heavy, 3=very_heavy
     bleeding_days: int = 0
@@ -95,12 +97,21 @@ def check_R3_cycle_length_range(entries: List[CycleEntry]) -> RuleResult:
                       f'{outside} of {len(last4)} cycles outside 24-38 day range')
 
 def check_R4_absent_period(entries: List[CycleEntry], days_since_last: float = 0, is_menopause: bool = False) -> RuleResult:
-    # If days_since_last not explicitly supplied, derive from latest entry start date if available
+    # If days_since_last not explicitly supplied, derive from latest entry date if available
     if days_since_last == 0 and entries:
-        last_entry = sorted([e for e in entries if e.start_date is not None], key=lambda x: x.start_date, reverse=True)
-        if last_entry:
-            today = date.today()
-            days_since_last = (today - last_entry[0].start_date).days
+        today = date.today()
+        for e in reversed(entries):
+            d_str = e.last_period_date or e.log_date
+            if d_str:
+                try:
+                    dt = datetime.strptime(d_str[:10], "%Y-%m-%d").date()
+                    days_since_last = max(0, (today - dt).days)
+                    break
+                except Exception:
+                    pass
+            elif e.start_date:
+                days_since_last = max(0, (today - e.start_date).days)
+                break
 
     triggered = days_since_last >= 90 and not is_menopause
     return RuleResult('R4', triggered, RULES_TABLE[4]['message'], RULES_TABLE[4]['source'], 'discuss',

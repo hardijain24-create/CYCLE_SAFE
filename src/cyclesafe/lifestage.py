@@ -46,3 +46,34 @@ def compute_lifestage_forecast_window(median_val: float, cv_val: float, age: Opt
         "uncertainty_label": label,
         "is_experimental": is_perimeno_user
     }
+
+def select_deployment_model(results, margin: float = 0.03) -> str:
+    """Multi-criteria model selection on development OOF.
+    
+    If candidate OOF MAE is within `margin` (0.03d) of top model, prefers simpler/stabler models to prevent metric chasing.
+    """
+    complexity_order = {
+        "naive_median": 1,
+        "personal_mean": 2,
+        "recent_mean_3": 3,
+        "ridge": 4,
+        "elastic_net": 5,
+        "random_forest": 6,
+        "extra_trees": 7,
+        "hist_gradient_boosting": 8
+    }
+    if isinstance(results, list):
+        sorted_res = sorted(results, key=lambda x: x["mae"])
+        best_mae = sorted_res[0]["mae"]
+        equivalent = [x for x in sorted_res if x["mae"] <= best_mae + margin]
+        for item in equivalent:
+            item["complexity"] = complexity_order.get(item["model"], 10)
+        equivalent.sort(key=lambda x: (x["complexity"], x["mae"]))
+        return str(equivalent[0]["model"])
+    else:
+        sorted_res = results.sort_values("mae").reset_index(drop=True)
+        best_mae = sorted_res.iloc[0]["mae"]
+        equivalent = sorted_res[sorted_res["mae"] <= best_mae + margin].copy()
+        equivalent["complexity"] = equivalent["model"].map(lambda m: complexity_order.get(m, 10))
+        selected = equivalent.sort_values(["complexity", "mae"]).iloc[0]
+        return str(selected["model"])

@@ -1,0 +1,11 @@
+# CycleSafe .gitignore
+*.db
+*.pkl
+__pycache__/
+user_data/
+.env
+*.pyc
+data/raw
+*.egg-info/
+models/*.pdf
+.pytest_cache/

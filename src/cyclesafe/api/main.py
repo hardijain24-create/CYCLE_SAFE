@@ -7,39 +7,40 @@ PDF doctor report generation, product access map, and privacy data management.
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import os
-import io
+import hmac
+import hashlib
 
-try:
-    from fastapi import FastAPI, HTTPException, Header, Response, Depends, status
-    from pydantic import BaseModel, Field
-    HAS_FASTAPI = True
-except ImportError:
-    HAS_FASTAPI = False
-    FastAPI = None
-    HTTPException = Exception
-    Header = lambda *args, **kwargs: None
-    Response = object
-    class BaseModel:
-        def __init__(self, **kwargs):
-            for k, v in kwargs.items():
-                setattr(self, k, v)
-        def model_dump(self):
-            return self.__dict__
-        def dict(self):
-            return self.__dict__
-    def Field(*args, **kwargs): return None
+from fastapi import FastAPI, HTTPException, Header, Response, Request, Depends, status
+from pydantic import BaseModel, Field
 
-from cyclesafe_rules import CycleEntry, run_all_rules
-from cyclesafe_privacy import CycleSafePrivacyEngine
-from cyclesafe_map import ProductAccessMapEngine
+from cyclesafe.rules.engine import CycleEntry, run_all_rules
+from cyclesafe.privacy.engine import CycleSafePrivacyEngine
+from cyclesafe.map.engine import ProductAccessMapEngine
+from cyclesafe.forecast import forecast_next_cycle
 
 privacy_engine = CycleSafePrivacyEngine()
 map_engine = ProductAccessMapEngine()
+
+SECRET_KEY = os.environ.get("CYCLESAFE_SECRET_KEY", "cyclesafe_default_secret_key_2026")
+
+def generate_user_token(user_id: str) -> str:
+    """Generates an HMAC-SHA256 authenticated token for a given user_id."""
+    return hmac.new(SECRET_KEY.encode("utf-8"), user_id.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
+
+def verify_token_and_user(user_id: str, authorization: Optional[str]) -> bool:
+    """Verifies that Authorization header contains valid token matching user_id."""
+    if not authorization:
+        return False
+    token = authorization.replace("Bearer ", "").strip()
+    expected = generate_user_token(user_id)
+    return hmac.compare_digest(token, expected)
 
 # Pydantic Schemas
 class CycleLogInput(BaseModel):
     cycle_length_days: float = Field(..., ge=15, le=90, description="Cycle length in days (15-90)")
     log_date: Optional[str] = Field(None, description="Cycle log date (YYYY-MM-DD)")
+    last_period_date: Optional[str] = Field(None, description="Last period date (YYYY-MM-DD)")
+    heavy_soaking_hourly: bool = Field(False, description="Heavy soaking pad/tampon hourly indicator")
     pain_score: int = Field(0, ge=0, le=3)
     bleeding_heaviness: int = Field(0, ge=0, le=3)
     bleeding_days: int = Field(0, ge=0, le=7)
@@ -64,35 +65,46 @@ class MapCheckinRequest(BaseModel):
     products: List[str]
     note: Optional[str] = None
 
-def verify_user_token(user_id: str, authorization: Optional[str]) -> bool:
-    """Verifies that authorization header matches the requested user_id. Returns True if valid, False if mismatch."""
-    if not authorization:
-        # Default dev fallback: token_{user_id}
-        return True
-    token = authorization.replace("Bearer ", "").strip()
-    expected = f"token_{user_id}"
-    return token == expected
+app = FastAPI(
+    title="CycleSafe API",
+    description="Privacy-first longitudinal women's-health API.",
+    version="5.0-ELITE"
+)
 
-if HAS_FASTAPI:
-    app = FastAPI(
-        title="CycleSafe API",
-        description="Privacy-first longitudinal women's-health API.",
-        version="5.0-ELITE"
-    )
-else:
-    class DummyApp:
-        def post(self, *args, **kwargs): return lambda func: func
-        def get(self, *args, **kwargs): return lambda func: func
-        def delete(self, *args, **kwargs): return lambda func: func
-    app = DummyApp()
+def check_auth(user_id: str, authorization: Optional[str]):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Unauthorized: Missing Authorization header.")
+    if not verify_token_and_user(user_id, authorization):
+        raise HTTPException(status_code=403, detail="Forbidden: Invalid token or token belongs to a different user.")
+
+@app.post("/consent")
+def register_consent(user_id: str):
+    """Registers active consent for user and returns authenticated token."""
+    if not user_id or not user_id.strip():
+        raise HTTPException(status_code=400, detail="User ID required.")
+    privacy_engine.register_consent(user_id)
+    token = generate_user_token(user_id)
+    return {
+        "status": "success",
+        "user_id": user_id,
+        "token": token,
+        "message": "Consent registered successfully."
+    }
+
+@app.post("/consent/withdraw")
+def withdraw_consent(user_id: str, authorization: Optional[str] = Header(None)):
+    """Withdraws consent for user."""
+    check_auth(user_id, authorization)
+    res = privacy_engine.withdraw_consent(user_id)
+    return res
 
 @app.post("/cycles")
 def create_cycle_log(user_id: str, cycle: CycleLogInput, authorization: Optional[str] = Header(None)):
-    """Logs a cycle entry for user. Requires active consent record."""
-    if not verify_user_token(user_id, authorization):
-        raise HTTPException(status_code=403, detail="Unauthorized access: Token does not match requested user_id.")
+    """Logs a cycle entry for user. Requires token auth and active consent."""
+    check_auth(user_id, authorization)
     try:
-        res = privacy_engine.add_cycle_record(user_id, cycle.model_dump() if hasattr(cycle, "model_dump") else cycle.dict())
+        data = cycle.model_dump() if hasattr(cycle, "model_dump") else cycle.dict()
+        res = privacy_engine.add_cycle_record(user_id, data)
         return res
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -100,70 +112,30 @@ def create_cycle_log(user_id: str, cycle: CycleLogInput, authorization: Optional
 @app.get("/cycles")
 def get_cycle_logs(user_id: str, authorization: Optional[str] = Header(None)):
     """Retrieves cycle history for user."""
-    if not verify_user_token(user_id, authorization):
-        raise HTTPException(status_code=403, detail="Unauthorized access: Token does not match requested user_id.")
+    check_auth(user_id, authorization)
+    if not privacy_engine.has_active_consent(user_id):
+        raise HTTPException(status_code=403, detail="Consent withdrawn.")
     return privacy_engine.get_cycle_records(user_id)
 
 @app.post("/forecast")
 def get_forecast(req: ForecastRequest):
-    """Returns next-cycle window forecast based on user history length and variability."""
+    """Returns next-cycle window forecast using single unified forecast entrypoint."""
     cycle_lengths = [c.cycle_length_days for c in req.cycles]
-    num_cycles = len(cycle_lengths)
-    
-    if num_cycles < 3:
-        return {
-            "user_id": req.user_id,
-            "status": "insufficient_data",
-            "message": "Fewer than 3 cycles logged. Not enough data yet to establish a personal baseline.",
-            "forecast_window": None
-        }
-
-    import numpy as np
-    median_val = float(np.median(cycle_lengths))
-    std_val = float(np.std(cycle_lengths)) if num_cycles > 1 else 0.0
-    cv_val = std_val / median_val if median_val > 0 else 0.0
-
-    # Variability calibration group
-    if cv_val < 0.08:
-        var_group = "low"
-        radius80 = 2.5
-        radius90 = 4.0
-    elif cv_val < 0.16:
-        var_group = "medium"
-        radius80 = 3.5
-        radius90 = 5.5
-    else:
-        var_group = "high"
-        radius80 = 5.0
-        radius90 = 8.0
-
-    label = "Personal Baseline Median Window"
-    if (req.age and req.age >= 45) or req.is_perimenopause:
-        label = "experimental, wider uncertainty (training data covers ages 21 to 43)"
-        var_group = "high (perimenopause)"
-        radius80 = 6.0
-        radius90 = 9.0
-
-    lower_80 = round(max(15.0, median_val - radius80), 1)
-    upper_80 = round(min(90.0, median_val + radius80), 1)
-
+    res = forecast_next_cycle(cycle_lengths, age=req.age, is_perimenopause=req.is_perimenopause)
     return {
         "user_id": req.user_id,
-        "status": "success",
-        "num_cycles_logged": num_cycles,
-        "point_estimate_median_days": round(median_val, 1),
-        "forecast_window": f"expected between day {lower_80:.0f} and day {upper_80:.0f}",
-        "interval_details": {
-            "80_percent_window": [lower_80, upper_80],
-            "variability_group": var_group,
-            "label": label
-        }
+        "status": "success" if res["forecast_available"] else "insufficient_data",
+        **res
     }
 
 @app.post("/flags")
 def evaluate_flags(req: ForecastRequest):
     """Evaluates non-diagnostic symptom rules against logged cycle history."""
-    entries = [CycleEntry(**(c.model_dump() if hasattr(c, "model_dump") else c.dict())) for c in req.cycles]
+    entries = []
+    for c in req.cycles:
+        data = c.model_dump() if hasattr(c, "model_dump") else c.dict()
+        entries.append(CycleEntry(**data))
+    
     rule_results = run_all_rules(entries, is_menopause=req.is_perimenopause)
     
     triggered_rules = [
@@ -192,36 +164,30 @@ def get_map_locations(lat: float = 19.0760, lon: float = 72.8777, radius_km: flo
     return map_engine.get_nearby(lat, lon, radius_km=radius_km, free_only=free_only, product_filter=product)
 
 @app.post("/map/checkin")
-def checkin_map_location(req: MapCheckinRequest, device_token: Optional[str] = Header(None, alias="device-token"), device_token_alt: Optional[str] = Header(None, alias="device_token")):
+def checkin_map_location(req: MapCheckinRequest, request: Request, device_token: Optional[str] = Header(None, alias="device-token"), device_token_alt: Optional[str] = Header(None, alias="device_token")):
     """Anonymous community check-in for access points."""
     token = device_token or device_token_alt
     if not token:
         raise HTTPException(status_code=400, detail="Missing required header 'device-token'.")
-    res = map_engine.submit_checkin(token, req.location_id, req.status, req.products, req.note)
+    
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    res = map_engine.submit_checkin(token, req.location_id, req.status, req.products, req.note, client_ip=client_ip)
     if res["status"] == "error":
+        if "Rate limit" in res.get("message", ""):
+            raise HTTPException(status_code=429, detail=res["message"])
         raise HTTPException(status_code=400, detail=res["message"])
     return res
 
 @app.get("/export")
 def export_user_data(user_id: str, authorization: Optional[str] = Header(None)):
     """Export user data as JSON (GDPR / DPDP compliance). Requires token auth matching user_id."""
-    if not verify_user_token(user_id, authorization):
-        if HAS_FASTAPI:
-            raise HTTPException(status_code=403, detail="Unauthorized access: Token does not match requested user_id.")
-        return {"status": "error", "code": 403, "message": "Unauthorized access"}
-
+    check_auth(user_id, authorization)
     json_str = privacy_engine.export_user_data(user_id)
-    if HAS_FASTAPI:
-        return Response(content=json_str, media_type="application/json")
-    return json_str
+    return Response(content=json_str, media_type="application/json")
 
 @app.delete("/data")
 def delete_user_data(user_id: str, authorization: Optional[str] = Header(None)):
     """Permanently delete user data. Requires token auth matching user_id."""
-    if not verify_user_token(user_id, authorization):
-        if HAS_FASTAPI:
-            raise HTTPException(status_code=403, detail="Unauthorized access: Token does not match requested user_id.")
-        return {"status": "error", "code": 403, "message": "Unauthorized access"}
-
+    check_auth(user_id, authorization)
     res = privacy_engine.delete_user_data(user_id)
     return res

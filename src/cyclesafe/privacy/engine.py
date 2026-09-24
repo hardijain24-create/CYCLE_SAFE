@@ -95,6 +95,23 @@ class CycleSafePrivacyEngine:
             conn.commit()
         return record
 
+    def record_consent(self, user_id: str, consent_given: bool = True, purposes: Optional[List[str]] = None) -> ConsentRecord:
+        if not consent_given:
+            self.withdraw_consent(user_id)
+            return ConsentRecord(user_id, purposes or [], active=False)
+        return self.register_consent(user_id, purposes)
+
+    def get_consent(self, user_id: str) -> Optional[Dict]:
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM consent WHERE user_id = ?", (user_id,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            d = dict(row)
+            d["active"] = bool(d["active"] == 1)
+            return d
+
     def has_active_consent(self, user_id: str) -> bool:
         with self._get_connection() as conn:
             cursor = conn.cursor()
@@ -108,11 +125,14 @@ class CycleSafePrivacyEngine:
             cursor = conn.cursor()
             cursor.execute("SELECT user_id FROM consent WHERE user_id = ?", (user_id,))
             if not cursor.fetchone():
-                return {"status": "error", "message": "No consent record found."}
-
-            cursor.execute("""
-                UPDATE consent SET active = 0, withdrawn_at = ? WHERE user_id = ?
-            """, (now_str, user_id))
+                cursor.execute("""
+                    INSERT INTO consent (user_id, purposes_json, given_at, active, withdrawn_at)
+                    VALUES (?, '[]', ?, 0, ?)
+                """, (user_id, now_str, now_str))
+            else:
+                cursor.execute("""
+                    UPDATE consent SET active = 0, withdrawn_at = ? WHERE user_id = ?
+                """, (now_str, user_id))
             conn.commit()
 
         return {

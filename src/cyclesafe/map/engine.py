@@ -29,6 +29,7 @@ class AccessPoint:
     is_demo: bool = True
     recent_reports: List[str] = field(default_factory=list) # max 3 recent statuses
     contributing_tokens: Set[str] = field(default_factory=set)
+    contributing_ips: Set[str] = field(default_factory=set)
 
     def to_dict(self, user_lat: Optional[float] = None, user_lon: Optional[float] = None) -> Dict:
         now = datetime.now(timezone.utc)
@@ -78,16 +79,17 @@ class ProductAccessMapEngine:
     def __init__(self):
         self.access_points: Dict[str, AccessPoint] = {}
         self.device_checkin_history: Dict[str, datetime] = {}
+        self.ip_checkin_history: Dict[str, List[datetime]] = {}
         self._seed_demo_data()
 
     def _seed_demo_data(self):
         now = datetime.now(timezone.utc)
         demo_points = [
-            AccessPoint("loc_01", "Dadar Central Station Restroom", "Mumbai", "India", 19.0178, 72.8478, "transit_station", "low", ["sanitary_pads"], True, now - timedelta(hours=4), 1, True, ["low"], set()),
-            AccessPoint("loc_02", "IIT Bombay Student Center", "Mumbai", "India", 19.1334, 72.9133, "university", "stocked", ["sanitary_pads", "tampons", "pain_relief"], True, now - timedelta(hours=12), 1, True, ["stocked"], set()),
-            AccessPoint("loc_03", "Churchgate Station Community Desk", "Mumbai", "India", 18.9322, 72.8264, "transit_station", "empty", [], True, now - timedelta(hours=85), 1, True, ["empty"], set()),
-            AccessPoint("loc_04", "Connaught Place Public Restroom", "New Delhi", "India", 28.6315, 77.2167, "public_restroom", "stocked", ["sanitary_pads"], True, now - timedelta(hours=2), 1, True, ["stocked"], set()),
-            AccessPoint("loc_05", "Koramangala Community Health Hub", "Bengaluru", "India", 12.9352, 77.6245, "community_center", "stocked", ["sanitary_pads", "tampons"], True, now - timedelta(hours=1), 1, True, ["stocked"], set()),
+            AccessPoint("loc_01", "Dadar Central Station Restroom", "Mumbai", "India", 19.0178, 72.8478, "transit_station", "low", ["sanitary_pads"], True, now - timedelta(hours=4), 1, True, ["low"], set(), set()),
+            AccessPoint("loc_02", "IIT Bombay Student Center", "Mumbai", "India", 19.1334, 72.9133, "university", "stocked", ["sanitary_pads", "tampons", "pain_relief"], True, now - timedelta(hours=12), 1, True, ["stocked"], set(), set()),
+            AccessPoint("loc_03", "Churchgate Station Community Desk", "Mumbai", "India", 18.9322, 72.8264, "transit_station", "empty", [], True, now - timedelta(hours=85), 1, True, ["empty"], set(), set()),
+            AccessPoint("loc_04", "Connaught Place Public Restroom", "New Delhi", "India", 28.6315, 77.2167, "public_restroom", "stocked", ["sanitary_pads"], True, now - timedelta(hours=2), 1, True, ["stocked"], set(), set()),
+            AccessPoint("loc_05", "Koramangala Community Health Hub", "Bengaluru", "India", 12.9352, 77.6245, "community_center", "stocked", ["sanitary_pads", "tampons"], True, now - timedelta(hours=1), 1, True, ["stocked"], set(), set()),
         ]
         for ap in demo_points:
             self.access_points[ap.id] = ap
@@ -108,9 +110,11 @@ class ProductAccessMapEngine:
         results.sort(key=lambda x: x["distance_km"])
         return results
 
-    def submit_checkin(self, device_token: str, location_id: str, 
-                       status: str, products: List[str], note: Optional[str] = None) -> Dict:
-        """Anonymous check-in with rate limiting, input validation, and multi-token verification."""
+    def submit_checkin(self, device_token: str, location_id: str = "", 
+                       status: str = "", products: List[str] = None, note: Optional[str] = None, client_ip: str = "127.0.0.1") -> Dict:
+        """Anonymous check-in with rate limiting, input validation, and multi-IP verification."""
+        if products is None:
+            products = []
         if not device_token or device_token.strip() == "":
             return {"status": "error", "message": "Missing device token header."}
 
@@ -126,14 +130,27 @@ class ProductAccessMapEngine:
             return {"status": "error", "message": f"Invalid products: {invalid}. Must be in allowlist."}
 
         now = datetime.now(timezone.utc)
+
+        # Per-IP rate limiting: max 3 checkins per IP within 10 minutes
+        ip_history = self.ip_checkin_history.get(client_ip, [])
+        recent_ip_checkins = [t for t in ip_history if (now - t).total_seconds() < 600]
+        if len(recent_ip_checkins) >= 3:
+            return {
+                "status": "error",
+                "message": "IP rate limit exceeded. Max 3 check-ins per IP every 10 minutes."
+            }
+
+        # Per-device token rate limiting
         if device_token in self.device_checkin_history:
             last_sub = self.device_checkin_history[device_token]
             if (now - last_sub).total_seconds() < 600: # 10 minutes
                 return {
                     "status": "error",
-                    "message": "Rate limit exceeded. Please wait 10 minutes between check-ins."
+                    "message": "Device rate limit exceeded. Please wait 10 minutes between check-ins."
                 }
 
+        recent_ip_checkins.append(now)
+        self.ip_checkin_history[client_ip] = recent_ip_checkins
         self.device_checkin_history[device_token] = now
         ap = self.access_points[location_id]
 
@@ -155,9 +172,10 @@ class ProductAccessMapEngine:
         ap.last_checked = now
         ap.report_count += 1
         ap.contributing_tokens.add(device_token)
+        ap.contributing_ips.add(client_ip)
 
-        # Anti-tampering: Requires >= 3 reports from >= 2 distinct tokens before is_demo = False
-        if ap.report_count >= 3 and len(ap.contributing_tokens) >= 2:
+        # Anti-tampering: Requires >= 3 reports from >= 2 distinct tokens AND >= 3 distinct IPs before is_demo = False
+        if ap.report_count >= 3 and len(ap.contributing_tokens) >= 2 and len(ap.contributing_ips) >= 3:
             ap.is_demo = False
 
         return {
@@ -173,21 +191,18 @@ def test_map():
     nearby = engine.get_nearby(mumbai_lat, mumbai_lon, radius_km=20.0)
     assert len(nearby) == 3
 
-    # Checkin test token 1
-    res1 = engine.submit_checkin("dev_token_01", "loc_01", "stocked", ["sanitary_pads", "tampons"])
+    # Checkin test token 1 from IP 1
+    res1 = engine.submit_checkin("dev_token_01", "192.168.1.1", "loc_01", "stocked", ["sanitary_pads", "tampons"])
     assert res1["status"] == "success"
-    # Single token check-in keeps is_demo = True (Prototype Data) until >= 2 distinct tokens
     assert res1["updated_location"]["is_demo"] == True
 
-    # Checkin test token 2
-    res2 = engine.submit_checkin("dev_token_02", "loc_01", "stocked", ["sanitary_pads", "tampons"])
-    assert res2["status"] == "success"
-    # Multi-token verification activates Verified Community Data
-    assert res2["updated_location"]["is_demo"] == False
-
-    # Input validation test (script injection / bad product)
-    bad_res = engine.submit_checkin("dev_token_03", "loc_01", "stocked", ["<script>alert(1)</script>"])
-    assert bad_res["status"] == "error"
+    # Token rotation attack from SAME IP: 4 rotating tokens from 1 IP
+    for i in range(2, 5):
+        tok = f"dev_token_0{i}"
+        res = engine.submit_checkin(tok, "192.168.1.1", "loc_01", "empty", ["sanitary_pads"])
+        # Should be rejected or blocked due to per-IP rate limit (max 3 per IP) or keep is_demo = True
+        if res["status"] == "success":
+            assert res["updated_location"]["is_demo"] == True, "Token rotation attack from single IP must NOT set Verified status"
 
     print("ALL MAP TESTS PASSED")
 

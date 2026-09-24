@@ -1,57 +1,76 @@
-# CycleSafe V5 Elite — Privacy-First Longitudinal Women's Health Pipeline
+# CycleSafe: Privacy-First Longitudinal Women's-Health Record
 
-CycleSafe is a privacy-first, non-diagnostic longitudinal health tracking system for menstrual and perimenopausal health records, cautious pattern flags, doctor-ready PDF reports, and product access point mapping.
+CycleSafe is a non-diagnostic, privacy-first longitudinal health project (menstrual + perimenopause tracking, cautious pattern flags, doctor-ready report PDF, and small product-access map).
 
-> **Disclaimer**: CycleSafe is an informational health tracking record, NOT a diagnostic tool or medical device. It does not diagnose diseases, predict fertility, or estimate exact menopause timing.
+## Core Principles & Spec Alignment
+- **Informational, Not Diagnostic**: No disease names or medical diagnosis claims.
+- **Defensible Forecasting**: Uses personal median baseline prediction with Mondrian (group-wise) conformal uncertainty ranges.
+- **Privacy & Security**: Mandatory HMAC bearer tokens, active consent enforcement, and real SQLite data erasure.
+- **Product-Access Map**: Community check-ins verified by multi-IP and multi-token thresholds with input sanitization.
 
----
-
-## Directory Structure
-
-```text
-cyclesafe/
-  ├── README.md                      # Overview, running commands, disclaimers
-  ├── requirements.txt               # Pinned runtime dependencies
-  ├── requirements-dev.txt           # Testing & dev dependencies (pytest, httpx)
-  ├── src/cyclesafe/
-  │   ├── config.py                  # Pipeline constants & core features
-  │   ├── forecast.py                # Shared unified forecast function
-  │   ├── lifestage.py               # Shared perimenopause uncertainty logic
-  │   ├── rules/engine.py            # Deterministic non-diagnostic symptom rules
-  │   ├── privacy/engine.py          # SQLite consent, export & true deletion engine
-  │   ├── map/engine.py              # Product access map with anti-tampering rules
-  │   └── api/main.py                # RESTful FastAPI service endpoints
-  ├── notebooks/
-  │   └── cycle_safe.ipynb           # Thin research notebook (24 cells)
-  ├── scripts/
-  │   ├── train_model.py             # Model training entrypoint
-  │   └── generate_demo_reports.py   # Demo PDF generator (regular, perimenopause, menopause)
-  ├── tests/
-  │   ├── test_regressions.py        # Comprehensive acceptance test suite
-  │   └── test_suite.py              # System acceptance tests
-  ├── models/                        # Saved artifacts, model cards & experiment registry
-  ├── data/                          # Data dictionaries and data specifications
-  ├── reports/                       # Generated demo PDF doctor reports
-  ├── docs/                          # Specifications, Privacy docs & Model Cards
-  └── archive/                       # Historic patches and legacy backups
+## Project Structure
+```
+cycle_safe/
+├── README.md
+├── pyproject.toml
+├── requirements.txt
+├── requirements-dev.txt
+├── .gitignore
+├── cycle_safe.py
+├── src/
+│   └── cyclesafe/
+│       ├── __init__.py
+│       ├── config.py
+│       ├── forecast.py
+│       ├── lifestage.py
+│       ├── rules/
+│       │   └── engine.py
+│       ├── report/
+│       │   └── pdf.py
+│       ├── privacy/
+│       │   └── engine.py
+│       ├── map/
+│       │   └── engine.py
+│       └── api/
+│           ├── main.py
+│           ├── schemas.py
+│           └── auth.py
+├── notebooks/
+│   └── cycle_safe.ipynb
+├── scripts/
+│   ├── train_model.py
+│   └── generate_demo_reports.py
+├── tests/
+│   ├── test_item1_auth.py
+│   ├── test_item2_consent.py
+│   ├── test_item3_flags.py
+│   ├── test_item4_forecast.py
+│   ├── test_item5_report.py
+│   ├── test_item6_model_selection.py
+│   ├── test_item7_map.py
+│   ├── test_item8_duplication.py
+│   ├── test_item9_repo_hygiene.py
+│   └── test_regressions.py
+├── models/
+│   ├── cyclesafe_model_card.json
+│   └── experiment_registry.json
+├── reports/
+│   ├── doctor_report_regular.pdf
+│   ├── doctor_report_perimenopause.pdf
+│   └── doctor_report_menopause.pdf
+├── docs/
+│   ├── PRIVACY.md
+│   ├── MODEL_CARD.md
+│   ├── SPEC_SUMMARY.md
+│   └── DOC-20260918-WA0030.docx
+└── archive/
 ```
 
----
-
-## Quick Start Commands
-
-### 1. Run Complete Acceptance Test Suite
+## Running Tests and API
 ```bash
-python tests/test_regressions.py
-python test_suite.py
-```
+# Run pytest from root
+python -m pytest
 
-### 2. Generate Demo Doctor Reports (PDF)
-```bash
-python scripts/generate_demo_reports.py
-```
-
-### 3. Run FastAPI Web Service
-```bash
-uvicorn src.cyclesafe.api.main:app --reload --port 8000
+# Start FastAPI server via uvicorn
+uvicorn cyclesafe.api.main:app --reload
 ```

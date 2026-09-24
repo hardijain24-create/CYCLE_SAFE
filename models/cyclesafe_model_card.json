@@ -1,0 +1,72 @@
+{
+  "experiment_identity": {
+    "project": "CycleSafe",
+    "pipeline": "V5_ELITE",
+    "research_layer": "Cells_8_10",
+    "artifact_version": "5.0",
+    "deployment_model": "ridge",
+    "random_state": 42
+  },
+  "task": "next-cycle length forecasting",
+  "input": "Longitudinal cycle history",
+  "training_data": "FedCycleData071012",
+  "training_validation": {
+    "development_validation": "rolling-origin temporal OOF",
+    "model_selection": "development OOF only",
+    "final_evaluation": "untouched per-user temporal holdout",
+    "test_used_for_model_selection": false,
+    "bootstrap": "user-clustered bootstrap",
+    "paired_model_comparison": "user-clustered paired bootstrap",
+    "uncertainty_intervals": "empirically calibrated prediction intervals",
+    "generalization_scope": "future-cycle temporal holdout; not an unseen-participant validation study"
+  },
+  "data": {
+    "forecasting_examples": null,
+    "participants": null,
+    "development_examples": null,
+    "final_test_examples": null,
+    "longitudinal_participants": null
+  },
+  "performance": {
+    "mae_days": null,
+    "rmse_days": null,
+    "macro_user_mae_days": null,
+    "median_user_mae_days": null,
+    "coverage_80": null,
+    "coverage_90": null,
+    "coverage_error_80": null,
+    "coverage_error_90": null,
+    "interval_score_80": null,
+    "interval_score_90": null,
+    "mae_ci_95": {
+      "lower": null,
+      "upper": null
+    }
+  },
+  "uncertainty": {
+    "radius80_days": null,
+    "radius90_days": null,
+    "calibration_source": "development OOF absolute residuals",
+    "interpretation": "Empirically calibrated prediction intervals. These are statistical ranges and not clinical guarantees."
+  },
+  "known_limitations": [
+    "Forecasting performance depends on the source dataset and represented population.",
+    "Cycle and symptom records may contain self-reporting or measurement limitations.",
+    "Performance does not establish clinical validity.",
+    "Forecast intervals are statistical ranges, not clinical guarantees.",
+    "Project-defined longitudinal timing-shift thresholds are descriptive and not clinically validated.",
+    "Research diagnostics characterize model behavior and should not be interpreted as clinical rules.",
+    "The personalization gate is experimental and has not been promoted to deployment."
+  ],
+  "not_designed_for": [
+    "Disease diagnosis",
+    "Fertility prediction",
+    "Medication decisions",
+    "Menopause diagnosis"
+  ],
+  "research_diagnostics": {},
+  "ablation_study": {},
+  "personalization_experiment": {},
+  "quantile_experiment": {},
+  "longitudinal_quality_summary": {}
+}

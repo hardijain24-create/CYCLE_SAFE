@@ -1,0 +1,13 @@
+[
+  {
+    "experiment": "baseline_ridge_v1",
+    "dataset": "FedCycleData071012",
+    "features": "all_core",
+    "model": "ridge",
+    "validation": "rolling_oof",
+    "mae": null,
+    "rmse": null,
+    "coverage_80": null,
+    "coverage_90": null
+  }
+]

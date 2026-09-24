@@ -237,10 +237,16 @@ def forecast_next_cycle(
     conf_pat = max(0, min(100, int(100 - std_val * 10)))
     conf_mod = max(0, min(100, int(100 - model_agreement_spread * 20)))
 
-    avg_conf = (conf_hist + conf_pat + conf_mod) / 3.0
+    has_multiple_models = len(all_predictions) >= 3
+    if has_multiple_models:
+        avg_conf = (conf_hist + conf_pat + conf_mod) / 3.0
+    else:
+        avg_conf = (conf_hist + conf_pat) / 2.0
+        conf_mod = None
+
     conf_label = "High" if avg_conf >= 75 else "Moderate" if avg_conf >= 50 else "Low"
 
-    method_label = f"Personalised Baseline ({model_name})" if model_loaded else "Personal Baseline Median (no trained model loaded)"
+    method_label = f"Personalised Baseline ({model_name})" if model_loaded else f"Personal median baseline (deployed model: {model_name})"
 
     return {
         "forecast_available": True,

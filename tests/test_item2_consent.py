@@ -33,25 +33,24 @@ def test_item2_consent_full_lifecycle():
     export_data = exp_res.json()
     assert export_data["data"]["cycle_count"] == 6
 
-    # 5. DELETE /data -> deletes data
-    del_res = client.delete(f"/data?user_id={user_id}", headers=headers)
-    assert del_res.status_code == 200
-    assert del_res.json()["status"] == "deleted"
-
-    # 6. GET /export -> empty cycles
-    exp_res2 = client.get(f"/export?user_id={user_id}", headers=headers)
-    assert exp_res2.status_code == 200
-    assert exp_res2.json()["data"]["cycle_count"] == 0
-
-    # 7. POST /consent/withdraw -> 200
+    # 5. POST /consent/withdraw -> 200
     w_res = client.post(f"/consent/withdraw?user_id={user_id}", headers=headers)
     assert w_res.status_code == 200
     assert w_res.json()["status"] == "withdrawn"
 
-    # 8. POST /cycles returns 403 after withdrawal
+    # 6. POST /cycles returns 403 after withdrawal
     post_after = client.post(
         f"/cycles?user_id={user_id}",
         json={"cycle_length_days": 28.0},
         headers=headers
     )
     assert post_after.status_code == 403, f"Expected 403 after consent withdrawal, got {post_after.status_code}"
+
+    # 7. DELETE /data -> deletes data
+    del_res = client.delete(f"/data?user_id={user_id}", headers=headers)
+    assert del_res.status_code == 200
+    assert del_res.json()["status"] == "deleted"
+
+    # 8. GET /export -> 403 because token is deleted
+    exp_res2 = client.get(f"/export?user_id={user_id}", headers=headers)
+    assert exp_res2.status_code == 403

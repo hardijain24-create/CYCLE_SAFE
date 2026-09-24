@@ -6,6 +6,7 @@ model card, and experiment registry.
 
 import os
 import sys
+import json
 
 # Ensure root is on sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -21,6 +22,24 @@ def main():
     # Run the full training pipeline
     raw_data = load_csv_source(DATA_URL)
     result = train_cyclesafe_V4(raw_data, save_artifact=True)
+
+    # Write model card
+    artifact = result.get("artifact", {})
+    model_card = {
+        "experiment_identity": {
+            "project": "CycleSafe",
+            "pipeline": "V5_ELITE",
+            "artifact_version": "5.0",
+            "deployment_model": result.get("deployment_model_name", "unknown"),
+            "random_state": 42
+        },
+        "per_group_coverage": artifact.get("per_group_coverage", {})
+    }
+    
+    # Ensure models directory exists
+    os.makedirs("models", exist_ok=True)
+    with open("models/cyclesafe_model_card.json", "w") as f:
+        json.dump(model_card, f, indent=2)
 
     print("\n" + "=" * 80)
     print("CYCLESAFE V5 COMPLETE")

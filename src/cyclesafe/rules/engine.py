@@ -4,7 +4,7 @@ Every rule:
 - Is a pure function taking a list of cycle records
 - Returns a dict with: id, triggered (bool), message, source, urgency
 - NEVER names a disease
-- Source is 'PENDING clinician/WHO verification' until verified
+- Source is WHO fact sheet citation or 'PENDING clinician verification'
 """
 
 from dataclasses import dataclass, field
@@ -45,28 +45,28 @@ class RuleResult:
 RULES_TABLE = [
     {'id': 'R2_URGENT', 'condition': 'soaking pad or tampon every hour for several hours',
      'message': 'If you are soaking through a pad or tampon every hour for several hours, seek urgent medical care.',
-     'source': 'PENDING clinician/WHO verification', 'urgency': 'urgent'},
+     'source': 'WHO, Menstrual health (18 June 2026) - https://www.who.int/news-room/fact-sheets/detail/menstrual-health', 'urgency': 'urgent'},
     {'id': 'R1', 'condition': 'severe pain (>=3) in >=3 of last 4 cycles', 
      'message': 'This pain pattern is worth discussing with a healthcare professional.',
-     'source': 'PENDING clinician/WHO verification', 'urgency': 'discuss'},
+     'source': 'WHO, Menstrual health (18 June 2026) - https://www.who.int/news-room/fact-sheets/detail/menstrual-health', 'urgency': 'discuss'},
     {'id': 'R2', 'condition': 'heavy bleeding (>=3) in >=3 of last 4 cycles, or bleeding >7 days',
      'message': 'This bleeding pattern is worth discussing with a healthcare professional.',
-     'source': 'PENDING clinician/WHO verification', 'urgency': 'discuss'},
+     'source': 'WHO, Menstrual health (18 June 2026) - https://www.who.int/news-room/fact-sheets/detail/menstrual-health', 'urgency': 'discuss'},
     {'id': 'R3', 'condition': '>=2 of last 4 cycles outside 24-38 days',
      'message': 'Your recent cycle lengths fall outside the typical 24-38 day range. This pattern is worth discussing with a healthcare professional.',
-     'source': 'PENDING clinician/WHO verification', 'urgency': 'discuss'},
+     'source': 'PENDING clinician verification', 'urgency': 'discuss'},
     {'id': 'R4', 'condition': 'no period for >=90 days (not menopause stage)',
      'message': 'No period has been logged for 90+ days. If you are not pregnant or in menopause, this is worth discussing with a healthcare professional.',
-     'source': 'PENDING clinician/WHO verification', 'urgency': 'discuss'},
+     'source': 'WHO, Menstrual health (18 June 2026) - https://www.who.int/news-room/fact-sheets/detail/menstrual-health', 'urgency': 'discuss'},
     {'id': 'R5', 'condition': 'low mood (<=1) logged in >=3 of last 4 cycles',
      'message': 'Persistent low mood has been logged across multiple cycles. Consider discussing this with a healthcare professional.',
-     'source': 'PENDING clinician/WHO verification', 'urgency': 'discuss'},
+     'source': 'WHO, Menstrual health (18 June 2026) - https://www.who.int/news-room/fact-sheets/detail/menstrual-health', 'urgency': 'discuss'},
     {'id': 'R6', 'condition': 'recent-3 median differs from earlier median by >=3 days',
      'message': 'A change in your typical cycle length has been detected.',
-     'source': 'PENDING clinician/WHO verification', 'urgency': 'info'},
+     'source': 'PENDING clinician verification', 'urgency': 'info'},
     {'id': 'R7_PERI', 'condition': 'hot flashes or night sweats in >=3 of last 4 cycles',
      'message': 'Frequent vasomotor symptoms (hot flashes/night sweats) recorded across recent cycles are worth discussing with a healthcare professional.',
-     'source': 'PENDING clinician/WHO verification', 'urgency': 'discuss'},
+     'source': 'PENDING clinician verification', 'urgency': 'discuss'},
 ]
 
 def check_R2_URGENT_extreme_bleeding(entries: List[CycleEntry]) -> RuleResult:

@@ -10,6 +10,7 @@
 ## Purpose Limitation
 - Data is processed strictly for the consented purposes.
 - Minimised data collection: only necessary attributes are gathered.
+- No advertising or third-party analytics SDKs are used. All processing happens in this application only.
 
 ## Right to Erasure
 - Users can completely delete all stored data via the privacy engine.

@@ -13,6 +13,8 @@ import hashlib
 from fastapi import FastAPI, HTTPException, Header, Response, Request, Depends, status
 from pydantic import BaseModel, Field
 
+from cyclesafe.api.schemas import ALLOWED_SYMPTOMS, SymptomLogInput
+
 from cyclesafe.rules.engine import CycleEntry, run_all_rules
 from cyclesafe.privacy.engine import CycleSafePrivacyEngine
 from cyclesafe.map.engine import ProductAccessMapEngine
@@ -149,6 +151,37 @@ def get_cycle_logs(user_id: str, authorization: Optional[str] = Header(None)):
     if not privacy_engine.has_active_consent(user_id):
         raise HTTPException(status_code=403, detail="Consent withdrawn.")
     return privacy_engine.get_cycle_records(user_id)
+
+@app.post("/symptoms")
+def log_symptom(user_id: str, symptom_input: SymptomLogInput, authorization: Optional[str] = Header(None)):
+    """Logs a symptom from the closed allowlist. Requires token auth and active consent."""
+    check_auth(user_id, authorization)
+    name = symptom_input.symptom.strip().lower()
+    if name not in ALLOWED_SYMPTOMS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Symptom '{symptom_input.symptom}' is not in the allowed list. "
+                   f"Allowed: {sorted(ALLOWED_SYMPTOMS)}"
+        )
+    log_date = symptom_input.log_date or datetime.now().strftime("%Y-%m-%d")
+    try:
+        res = privacy_engine.add_symptom_record(user_id, name, symptom_input.severity, log_date)
+        return res
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+@app.get("/symptoms")
+def get_symptom_logs(user_id: str, authorization: Optional[str] = Header(None)):
+    """Retrieves symptom log history for user."""
+    check_auth(user_id, authorization)
+    if not privacy_engine.has_active_consent(user_id):
+        raise HTTPException(status_code=403, detail="Consent withdrawn.")
+    return privacy_engine.get_symptom_records(user_id)
+
+@app.get("/symptoms/allowed")
+def get_allowed_symptoms():
+    """Returns the closed list of allowed symptom names."""
+    return {"allowed_symptoms": sorted(ALLOWED_SYMPTOMS)}
 
 @app.post("/forecast")
 def get_forecast(req: ForecastRequest):

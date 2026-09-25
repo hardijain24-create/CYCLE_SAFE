@@ -35,3 +35,17 @@ class MapCheckinRequest(BaseModel):
     status: str
     products: List[str]
     note: Optional[str] = None
+
+# Closed allowlist: privacy-safe, non-diagnostic symptom categories.
+# Free text is rejected to prevent identifying or self-diagnostic strings.
+ALLOWED_SYMPTOMS = frozenset([
+    "cramps", "bloating", "headache", "acne", "breast_tenderness",
+    "backache", "nausea", "hot_flashes", "night_sweats",
+    "sleep_disruption", "fatigue", "mood_change",
+])
+
+class SymptomLogInput(BaseModel):
+    symptom: str = Field(..., description="Symptom name from the closed allowlist")
+    severity: int = Field(1, ge=0, le=3, description="0=none, 1=mild, 2=moderate, 3=severe")
+    log_date: Optional[str] = Field(None, description="Date of symptom (YYYY-MM-DD)")
+

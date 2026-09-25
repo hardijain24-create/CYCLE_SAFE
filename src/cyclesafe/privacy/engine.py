@@ -188,6 +188,37 @@ class CycleSafePrivacyEngine:
                 results.append(d)
             return results
 
+    def add_symptom_record(self, user_id: str, symptom: str, severity: int, log_date: str) -> Dict:
+        """Adds a symptom record. Enforces active consent requirement."""
+        if not self.has_active_consent(user_id):
+            raise PermissionError(f"User '{user_id}' does not have an active consent record. Data logging blocked.")
+
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO symptom_logs (user_id, symptom, severity, log_date)
+                VALUES (?, ?, ?, ?)
+            """, (user_id, symptom, severity, log_date))
+            conn.commit()
+            rec_id = cursor.lastrowid
+
+        return {
+            "status": "success",
+            "id": rec_id,
+            "user_id": user_id,
+            "symptom": symptom,
+            "severity": severity,
+            "log_date": log_date
+        }
+
+    def get_symptom_records(self, user_id: str) -> List[Dict]:
+        """Retrieves all symptom log entries for a user."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM symptom_logs WHERE user_id = ? ORDER BY log_date ASC", (user_id,))
+            rows = cursor.fetchall()
+            return [dict(r) for r in rows]
+
     def export_user_data(self, user_id: str) -> str:
         """Export all user data as JSON."""
         with self._get_connection() as conn:
@@ -199,6 +230,7 @@ class CycleSafePrivacyEngine:
                 consent_dict["purposes"] = json.loads(consent_dict["purposes_json"])
 
         cycles = self.get_cycle_records(user_id)
+        symptoms = self.get_symptom_records(user_id)
 
         export = {
             "export_metadata": {
@@ -210,7 +242,9 @@ class CycleSafePrivacyEngine:
             "consent": consent_dict,
             "data": {
                 "cycles": cycles,
-                "cycle_count": len(cycles)
+                "cycle_count": len(cycles),
+                "symptoms": symptoms,
+                "symptom_count": len(symptoms)
             }
         }
         return json.dumps(export, indent=2, default=str)

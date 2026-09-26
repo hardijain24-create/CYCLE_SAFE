@@ -1509,28 +1509,29 @@
       const token = localStorage.getItem('cs_auth_token') || ('anon_' + Math.random().toString(36).slice(2));
 
       container.innerHTML = locations.map(loc => {
+        const effectiveStatus = (window.localStockOverrides && window.localStockOverrides[loc.id]) || loc.status || 'stocked';
         const products = (loc.products || []).map(p =>
           `<span class="font-mono text-[10px] bg-csLightBg border border-csDark px-2 py-0.5 rounded font-bold uppercase">${p.replace(/_/g,' ')}</span>`
         ).join('');
-        const statusColor = loc.status === 'stocked' ? 'bg-emerald-200 text-emerald-950' : loc.status === 'low' ? 'bg-amber-200 text-amber-900' : 'bg-rose-200 text-rose-900';
+        const statusColor = effectiveStatus === 'stocked' ? 'bg-emerald-200 text-emerald-950' : effectiveStatus === 'low' ? 'bg-amber-200 text-amber-900' : 'bg-rose-200 text-rose-900';
         const isFree = loc.is_free;
         return `
-          <div class="bg-white border-2 border-csDark rounded-2xl p-5 sui-shadow flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <div id="loc-card-${loc.id}" class="bg-white border-2 border-csDark rounded-2xl p-4 sm:p-5 sui-shadow flex flex-col md:flex-row justify-between md:items-center gap-4">
             <div>
               <div class="flex flex-wrap items-center gap-2">
-                <h4 class="gasoek-font text-xl text-csDark">${loc.name}</h4>
+                <h4 class="gasoek-font text-lg sm:text-xl text-csDark">${loc.name}</h4>
                 ${isFree ? '<span class="pill-tag bg-emerald-200 text-emerald-950 border border-csDark px-2 py-0.5">FREE ACCESS</span>' : '<span class="pill-tag bg-csWarmBg text-csDark border border-csDark px-2 py-0.5">COMMERCIAL</span>'}
-                <span class="pill-tag ${statusColor} border border-csDark px-2 py-0.5">${(loc.status || 'unknown').toUpperCase()}</span>
+                <span id="status-badge-${loc.id}" class="pill-tag ${statusColor} border border-csDark px-2 py-0.5 font-bold transition-all duration-300">${effectiveStatus.toUpperCase()}</span>
               </div>
               <p class="font-mono text-xs text-csDark/70 mt-1">${loc.city || ''} ${loc.country || ''} • ${loc.category || ''}</p>
               <div class="flex flex-wrap gap-1.5 mt-2">${products}</div>
             </div>
-            <button type="button" onclick="event.preventDefault(); verifyLocationStock(event, '${loc.id}', '${(loc.name || '').replace(/'/g, "\\'")}', '${token}')" class="font-mono text-xs font-bold px-4 py-2 bg-csWarmBg border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-amber-300 transition">VERIFY STOCK ✓</button>
+            <button type="button" onclick="event.preventDefault(); verifyLocationStock(event, '${loc.id}', '${(loc.name || '').replace(/'/g, "\\'")}', '${token}')" class="font-mono text-xs font-bold px-4 py-2.5 bg-csWarmBg border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-amber-300 transition shrink-0">VERIFY STOCK ✓</button>
           </div>`;
       }).join('');
     }
 
-    // Prompt user to select stock level (STOCKED, LOW, EMPTY) and submit checkin
+    // Prompt user to select stock level (STOCKED, LOW, EMPTY) and immediately update UI badge
     function verifyLocationStock(evt, locId, locName, token) {
       if (evt) evt.preventDefault();
       const choice = prompt(`Verify current product stock level for:\n"${locName}"\n\nSelect status:\n1. STOCKED (High Supply ✅)\n2. LOW (Low Supply 🟡)\n3. EMPTY (Out of Stock ❌)\n\nEnter 1, 2, or 3:`, "1");
@@ -1538,6 +1539,19 @@
 
       const statusMap = { "1": "stocked", "2": "low", "3": "empty" };
       const selectedStatus = statusMap[choice.trim()] || "stocked";
+      
+      // Store local override so it persists across re-renders
+      window.localStockOverrides = window.localStockOverrides || {};
+      window.localStockOverrides[locId] = selectedStatus;
+
+      // INSTANT DOM BADGE REFLECTION
+      const badge = document.getElementById(`status-badge-${locId}`);
+      if (badge) {
+        const statusColor = selectedStatus === 'stocked' ? 'bg-emerald-200 text-emerald-950' : selectedStatus === 'low' ? 'bg-amber-200 text-amber-900' : 'bg-rose-200 text-rose-900';
+        badge.className = `pill-tag ${statusColor} border border-csDark px-2 py-0.5 font-bold transform scale-110 transition-all duration-300`;
+        badge.textContent = selectedStatus.toUpperCase();
+      }
+
       submitCheckinToAPI(evt, locId, selectedStatus, token);
     }
 
@@ -2371,6 +2385,25 @@
       setTimeout(loadMapFromAPI, 200);
     }
   </script>
+
+  <!-- MOBILE BOTTOM STICKY NAVIGATION BAR (Mobile & Tablet Devices) -->
+  <nav class="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t-2 border-csDark p-2.5 flex justify-around items-center font-mono text-[10px] font-bold text-csDark sui-shadow">
+    <button onclick="showView('dashboard')" class="flex flex-col items-center gap-0.5 hover:text-csAccent">
+      <span class="text-base">📊</span><span>DASH</span>
+    </button>
+    <button onclick="showView('log')" class="flex flex-col items-center gap-0.5 hover:text-csAccent">
+      <span class="text-base">✍️</span><span>LOG</span>
+    </button>
+    <button onclick="showView('calendar')" class="flex flex-col items-center gap-0.5 hover:text-csAccent">
+      <span class="text-base">📅</span><span>CALENDAR</span>
+    </button>
+    <button onclick="showView('doctor')" class="flex flex-col items-center gap-0.5 hover:text-csAccent">
+      <span class="text-base">🩺</span><span>REPORT</span>
+    </button>
+    <button onclick="showView('products'); setTimeout(loadMapFromAPI, 100);" class="flex flex-col items-center gap-0.5 hover:text-csAccent">
+      <span class="text-base">📍</span><span>MAP</span>
+    </button>
+  </nav>
 
 </body>
 </html>

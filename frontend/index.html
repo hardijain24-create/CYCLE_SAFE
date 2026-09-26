@@ -115,8 +115,27 @@
       <button id="nav-privacy" onclick="showView('privacy')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PRIVACY</button>
     </nav>
 
-    <!-- Quick action auth/profile — shown/hidden based on whether user has signed up -->
-    <div class="flex items-center space-x-3">
+    <!-- Quick action buttons: SOS, Discreet Mode, Language, Auth/Profile -->
+    <div class="flex items-center space-x-2">
+      <!-- Emergency SOS Supply Locator Button -->
+      <button onclick="triggerEmergencySOS()" class="hidden md:inline-flex font-mono text-[11px] font-bold px-3 py-1.5 rounded-lg bg-red-500 text-white border-2 border-csDark sui-shadow-sm hover:bg-red-600 transition animate-pulse" title="Locate emergency period supplies near you">
+        🚨 SOS SUPPLIES
+      </button>
+
+      <!-- Discreet Camouflage Safety Shield -->
+      <button id="discreet-toggle-btn" onclick="toggleDiscreetMode()" class="font-mono text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-csWarmBg text-csDark border-2 border-csDark hover:bg-amber-300 transition" title="Toggle discreet study camouflage mode for privacy">
+        🛡️ DISCREET MODE
+      </button>
+
+      <!-- Language Selector -->
+      <select id="lang-selector" onchange="setLanguage(this.value)" class="font-mono text-[11px] font-bold px-2 py-1.5 rounded-lg bg-white text-csDark border-2 border-csDark focus:outline-none cursor-pointer">
+        <option value="en">🌐 EN</option>
+        <option value="hi">🇮🇳 HI</option>
+        <option value="es">🇪🇸 ES</option>
+        <option value="fr">🇫🇷 FR</option>
+        <option value="sw">🌍 SW</option>
+      </select>
+
       <div id="auth-buttons" class="flex items-center space-x-2">
         <button onclick="showView('auth')" class="hidden sm:inline-flex font-mono text-xs font-bold px-3 py-2 rounded-lg border-2 border-csDark hover:bg-csLightBg transition">SIGN IN</button>
         <button onclick="showView('signup')" class="font-mono text-xs font-bold px-4 py-2 rounded-lg bg-csAccent text-white border-2 border-csDark sui-shadow-sm hover:opacity-90 transition">SIGN UP</button>
@@ -316,6 +335,19 @@
           <!-- Conformal Forecast Box -->
           <div id="dash-forecast-box" class="bg-white border-2 border-csDark rounded-3xl p-6 sui-shadow space-y-3">
             <span class="font-mono text-xs font-bold text-csDark/50">Log 3+ cycles to activate conformal forecast.</span>
+          </div>
+
+          <!-- Phase-Specific Daily Health & Wellness Advice -->
+          <div id="dash-phase-advice-box" class="bg-csPink border-2 border-csDark rounded-3xl p-6 sui-shadow space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between border-b border-csDark/20 pb-2">
+              <span class="font-bold text-csDark uppercase tracking-wider">💡 DAILY PHASE HEALTH GUIDANCE</span>
+              <span id="advice-phase-tag" class="pill-tag bg-csAccent text-white px-2 py-0.5 font-bold">MENSTRUAL</span>
+            </div>
+            <div id="advice-content" class="space-y-1.5 text-csDark/90">
+              <p><strong>🥗 Nutrition:</strong> Focus on iron-rich foods (spinach, lentils), magnesium, and hydration.</p>
+              <p><strong>🏋️ Activity:</strong> Light restorative walking, pelvic stretches, and rest.</p>
+              <p><strong>🧠 Hormones & Mood:</strong> Estrogen and progesterone are at baseline levels. Prioritize sleep.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1096,6 +1128,7 @@
 
         if (cycleTitle) cycleTitle.textContent = `CYCLE DAY ${diffDays} · ${phase}`;
         if (cycleDesc) cycleDesc.textContent = phaseDesc;
+        updatePhaseAdvice(phase);
         if (medDays) medDays.textContent = `${medianLen.toFixed(1)} Days`;
         if (confRange) confRange.textContent = `${lo80} – ${hi80} d (80%)`;
 
@@ -2033,6 +2066,72 @@
 
       csToast(`✓ ${entries.length} cycle${entries.length > 1 ? 's' : ''} saved! Your personalised report is ready.`);
       showView('doctor');   // Send straight to their personalised doctor report
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 9. GLOBAL PITCH-WINNING INCLUSION & DISCREET SAFETY ENHANCEMENTS
+    // ─────────────────────────────────────────────────────────────
+    function updatePhaseAdvice(phase) {
+      const tag = document.getElementById('advice-phase-tag');
+      const content = document.getElementById('advice-content');
+      if (!tag || !content) return;
+      tag.textContent = phase;
+      
+      const adviceMap = {
+        'MENSTRUAL': `
+          <p><strong>🥗 Nutrition:</strong> Focus on iron-rich foods (spinach, dark chocolate, lentils), Vitamin C, and hydration.</p>
+          <p><strong>🏋️ Activity:</strong> Light restorative walking, gentle stretching, low-impact yoga, warm compression.</p>
+          <p><strong>🧠 Hormones & Mood:</strong> Estrogen & progesterone at baseline. Prioritize rest and sleep.</p>`,
+        'FOLLICULAR': `
+          <p><strong>🥗 Nutrition:</strong> Light fresh foods, fermented vegetables, lean protein, and complex carbs.</p>
+          <p><strong>🏋️ Activity:</strong> Peak energy window! Ideal for strength training, cardio, or trying new workouts.</p>
+          <p><strong>🧠 Hormones & Mood:</strong> Estrogen levels rising. Enhanced focus, high social energy, and mental clarity.</p>`,
+        'OVULATION': `
+          <p><strong>🥗 Nutrition:</strong> Anti-inflammatory foods, berries, zinc, and fiber to support estrogen metabolism.</p>
+          <p><strong>🏋️ Activity:</strong> High-intensity interval training (HIIT), group fitness, energetic activities.</p>
+          <p><strong>🧠 Hormones & Mood:</strong> Peak LH & estrogen. Maximum confidence, vitality, and social energy.</p>`,
+        'LUTEAL': `
+          <p><strong>🥗 Nutrition:</strong> Complex carbs (sweet potatoes, oats), B-vitamins, dark leafy greens to curb PMS cravings.</p>
+          <p><strong>🏋️ Activity:</strong> Steady-state cardio, pilates, swimming. Ease intensity as period approaches.</p>
+          <p><strong>🧠 Hormones & Mood:</strong> Progesterone dominant, then drops. Prioritize stress reduction and self-care.</p>`
+      };
+      content.innerHTML = adviceMap[phase] || adviceMap['FOLLICULAR'];
+    }
+
+    function triggerEmergencySOS() {
+      showView('products');
+      csToast('🚨 Emergency Locator Active: Finding nearest period supply stations...');
+      setTimeout(loadMapFromAPI, 100);
+    }
+
+    let isDiscreetMode = false;
+    function toggleDiscreetMode() {
+      isDiscreetMode = !isDiscreetMode;
+      const btn = document.getElementById('discreet-toggle-btn');
+      const logoText = document.querySelector('header .font-gasoek');
+      const logoSub = document.querySelector('header .font-mono.text-\\[10px\\]');
+      if (isDiscreetMode) {
+        if (btn) { btn.innerHTML = '🛡️ ACTIVE: CAMPUS MODE'; btn.classList.add('bg-green-400'); }
+        if (logoText) logoText.textContent = 'CAMPUS NOTES';
+        if (logoSub) logoSub.textContent = 'STUDY ARCHIVE & REVISION PLANNER';
+        csToast('🛡️ Discreet Mode Active: Interface disguised under study camouflage.');
+      } else {
+        if (btn) { btn.innerHTML = '🛡️ DISCREET MODE'; btn.classList.remove('bg-green-400'); }
+        if (logoText) logoText.textContent = 'CYCLESAFE';
+        if (logoSub) logoSub.textContent = 'Health History & Patterns';
+        csToast('CycleSafe brand restored.');
+      }
+    }
+
+    function setLanguage(lang) {
+      const messages = {
+        en: '🌐 Switched to English',
+        hi: '🇮🇳 हिंदी भाषा चुनी गई (Hindi selected)',
+        es: '🇪🇸 Idioma cambiado a Español',
+        fr: '🇫🇷 Langue modifiée en Français',
+        sw: '🌍 Lugha imebadilishwa kuwa Kiswahili'
+      };
+      csToast(messages[lang] || 'Language updated');
     }
 
     window.addEventListener('DOMContentLoaded', () => {

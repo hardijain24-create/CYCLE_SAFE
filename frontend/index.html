@@ -84,11 +84,11 @@
 <body class="bg-csPrimary text-csDark font-sans selection:bg-csPink selection:text-csDark min-h-screen flex flex-col justify-between">
 
   <!-- TOP TICKER BANNER -->
-  <div class="bg-csAccent text-white py-2 px-4 font-mono text-xs font-bold uppercase tracking-wider overflow-hidden border-b-2 border-csDark">
+  <div id="top-ticker-banner" class="bg-csAccent text-white py-2 px-4 font-mono text-xs font-bold uppercase tracking-wider overflow-hidden border-b-2 border-csDark">
     <div class="flex items-center space-x-6">
-      <span>● CYCLESAFE 2026 · PRIVACY-FIRST WOMEN'S HEALTH</span>
-      <span class="hidden md:inline">▲ TRACK → UNDERSTAND → SUMMARIZE → SHARE</span>
-      <span class="hidden lg:inline">◆ ZERO THIRD-PARTY TRACKERS · CLIENT-ENCRYPTED HEALTH ARCHIVE</span>
+      <span id="ticker-span-1">● CYCLESAFE 2026 · PRIVACY-FIRST WOMEN'S HEALTH</span>
+      <span id="ticker-span-2" class="hidden md:inline">▲ TRACK → UNDERSTAND → SUMMARIZE → SHARE</span>
+      <span id="ticker-span-3" class="hidden lg:inline">◆ ZERO THIRD-PARTY TRACKERS · CLIENT-ENCRYPTED HEALTH ARCHIVE</span>
     </div>
   </div>
 
@@ -2135,20 +2135,37 @@
       const btn = document.getElementById('discreet-toggle-btn');
       const logoText = document.getElementById('brand-title');
       const logoSub = document.getElementById('brand-sub');
+      const t1 = document.getElementById('ticker-span-1');
+      const t2 = document.getElementById('ticker-span-2');
+      const t3 = document.getElementById('ticker-span-3');
+      const dashTitle = document.getElementById('dash-main-title');
+      const mapTitle = document.getElementById('map-main-title');
       
       if (isDiscreetMode) {
+        document.title = 'Campus Notes — Study Archive & Revision Planner';
         if (txtDiscreet) txtDiscreet.textContent = 'CAMPUS';
-        if (btn) { btn.classList.remove('bg-amber-200', 'text-amber-900'); btn.classList.add('bg-emerald-200', 'text-emerald-900'); }
+        if (btn) { btn.classList.remove('bg-amber-200', 'text-amber-900'); btn.classList.add('bg-emerald-300', 'text-emerald-950'); }
         if (logoText) logoText.textContent = 'CAMPUS NOTES';
         if (logoSub) logoSub.textContent = 'STUDY ARCHIVE & REVISION PLANNER';
+        if (t1) t1.textContent = "● CAMPUS NOTES 2026 · PRIVATE REVISION PLANNER";
+        if (t2) t2.textContent = "▲ MODULES → NOTES → SUMMARY → REVISE";
+        if (t3) t3.textContent = "◆ LOCAL STORAGE ONLY · ENCRYPTED REVISION ARCHIVE";
+        if (dashTitle) dashTitle.textContent = "CAMPUS STUDY & TIMELINE PLANNER.";
+        if (mapTitle) mapTitle.textContent = "CAMPUS STUDY & SUPPLY LOCATOR";
         csToast('🛡️ Discreet Mode Active: Interface disguised under study camouflage.');
       } else {
+        document.title = 'CycleSafe — Your Health Has a Story';
         const lang = localStorage.getItem('cs_lang') || 'en';
         const curDict = TRANSLATIONS[lang] || TRANSLATIONS['en'];
         if (txtDiscreet) txtDiscreet.textContent = curDict['txt-discreet'] || 'DISCREET';
-        if (btn) { btn.classList.remove('bg-emerald-200', 'text-emerald-900'); btn.classList.add('bg-amber-200', 'text-amber-900'); }
+        if (btn) { btn.classList.remove('bg-emerald-300', 'text-emerald-950'); btn.classList.add('bg-amber-200', 'text-amber-900'); }
         if (logoText) logoText.textContent = 'CYCLESAFE';
         if (logoSub) logoSub.textContent = 'Health History & Patterns';
+        if (t1) t1.textContent = "● CYCLESAFE 2026 · PRIVACY-FIRST WOMEN'S HEALTH";
+        if (t2) t2.textContent = "▲ TRACK → UNDERSTAND → SUMMARIZE → SHARE";
+        if (t3) t3.textContent = "◆ ZERO THIRD-PARTY TRACKERS · CLIENT-ENCRYPTED HEALTH ARCHIVE";
+        if (dashTitle) dashTitle.textContent = curDict['dash-main-title'] || "YOUR HEALTH, OVER TIME.";
+        if (mapTitle) mapTitle.textContent = curDict['map-main-title'] || "PRODUCT ACCESS MAP";
         csToast('CycleSafe brand restored.');
       }
     }

@@ -132,9 +132,27 @@ class ProductAccessMapEngine:
             AccessPoint("blr_04", "Jayanagar – BBMP Women's Health Kiosk", "Bengaluru", "India",
                         12.9308, 77.5838, "community_center", "stocked",
                         ["sanitary_pads", "tampons", "wipes"], True, now - timedelta(hours=7), 4, True, ["stocked", "low", "stocked"], set(), set()),
+
+            # ── VANCOUVER, CANADA — Ziludi Connect Hackathon Host City ────────────
+            AccessPoint("van_01", "Ziludi Connect HQ – Wellness Resource Desk", "Vancouver", "Canada",
+                        49.2827, -123.1207, "community_center", "stocked",
+                        ["sanitary_pads", "tampons", "menstrual_cups", "pain_relief", "wipes"], True, now - timedelta(hours=1), 14, True, ["stocked", "stocked", "stocked"], set(), set()),
+            AccessPoint("van_02", "UBC Student Union Building – Period Supply Station", "Vancouver", "Canada",
+                        49.2659, -123.2494, "university", "stocked",
+                        ["sanitary_pads", "tampons", "menstrual_cups"], True, now - timedelta(hours=3), 10, True, ["stocked", "stocked", "stocked"], set(), set()),
+            AccessPoint("van_03", "SFU Harbour Centre – Campus Health Kiosk", "Vancouver", "Canada",
+                        49.2845, -123.1116, "university", "stocked",
+                        ["sanitary_pads", "tampons", "pain_relief"], True, now - timedelta(hours=5), 6, True, ["stocked", "stocked", "low"], set(), set()),
+            AccessPoint("van_04", "Granville Island – Public Market First Aid Post", "Vancouver", "Canada",
+                        49.2712, -123.1342, "transit_station", "low",
+                        ["sanitary_pads"], True, now - timedelta(hours=20), 3, True, ["low", "stocked", "low"], set(), set()),
+            AccessPoint("van_05", "VGH Patient & Family Resource Centre", "Vancouver", "Canada",
+                        49.2612, -123.1233, "community_center", "stocked",
+                        ["sanitary_pads", "tampons", "wipes", "pain_relief"], True, now - timedelta(hours=4), 8, True, ["stocked", "stocked", "stocked"], set(), set()),
         ]
         for ap in demo_points:
             self.access_points[ap.id] = ap
+
 
 
     def get_nearby(self, lat: float, lon: float, radius_km: float = 20.0,

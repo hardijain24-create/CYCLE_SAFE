@@ -32,10 +32,12 @@ class ConsentRecord:
 
 class CycleSafePrivacyEngine:
     """Technical privacy & data governance engine backed by SQLite."""
-    def __init__(self, db_path: str = "cyclesafe_user_data.db", storage_dir: str = "user_data"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None, storage_dir: str = "user_data"):
+        # Allow env-var override so Vercel (read-only FS) can redirect to /tmp
+        self.db_path = db_path or os.environ.get("CYCLESAFE_DB_PATH", "cyclesafe_user_data.db")
         self.storage_dir = storage_dir
         self._init_db()
+
 
     def _get_connection(self):
         conn = sqlite3.connect(self.db_path)

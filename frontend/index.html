@@ -95,7 +95,7 @@
   <!-- PERSISTENT TOP NAVIGATION -->
   <header class="sticky top-0 z-50 bg-csPrimary/95 backdrop-blur-md border-b-2 border-csDark px-4 lg:px-8 py-3.5 flex items-center justify-between">
     <div class="flex items-center space-x-3 cursor-pointer" onclick="showView('landing')">
-      <div class="w-10 h-10 rounded-xl bg-csAccent border-2 border-csDark flex items-center justify-center font-gasoek text-white text-xl sui-shadow-sm">CS</div>
+      <img src="assets/logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CycleSafe Logo" class="w-11 h-11 rounded-xl border-2 border-csDark bg-white object-cover sui-shadow-sm">
       <div class="flex flex-col">
         <span class="font-gasoek text-2xl tracking-tight text-csDark leading-none">CYCLESAFE</span>
         <span class="font-mono text-[10px] text-csAccent font-bold uppercase tracking-widest">Health History & Patterns</span>
@@ -693,9 +693,10 @@
     <!-- VIEW 10: AUTH / SIGN IN -->
     <section id="view-auth" class="view-section hidden py-16 px-4 sm:px-8 max-w-lg mx-auto">
       <div class="bg-white border-4 border-csDark rounded-3xl p-8 sui-shadow space-y-6">
-        <div class="text-center pb-3 border-b-2 border-csDark">
+        <div class="text-center pb-3 border-b-2 border-csDark flex flex-col items-center">
+          <img src="assets/logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CycleSafe Logo" class="w-16 h-16 rounded-2xl border-2 border-csDark bg-white object-cover sui-shadow-sm mb-2">
           <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest">ACCESS ARCHIVE</span>
-          <h2 class="gasoek-font text-3xl text-csDark mt-1">SIGN IN</h2>
+          <h2 class="gasoek-font text-3xl text-csDark mt-0.5">SIGN IN</h2>
         </div>
         <form onsubmit="handleSignIn(event)" class="space-y-4 font-mono text-xs">
           <div>
@@ -720,10 +721,13 @@
     <!-- VIEW 11: SIGN UP (NEW COMPREHENSIVE REGISTRATION) -->
     <section id="view-signup" class="view-section hidden py-12 px-4 sm:px-8 max-w-2xl mx-auto">
       <div class="bg-white border-4 border-csDark rounded-3xl p-8 sm:p-10 sui-shadow space-y-8">
-        <div class="pb-4 border-b-2 border-csDark">
-          <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">NEW USER REGISTRATION</span>
-          <h2 class="gasoek-font text-4xl text-csDark mt-1">CREATE YOUR PROFILE</h2>
-          <p class="text-sm text-csDark/80 font-medium mt-1">Create an email and password so you can sign back in later. Tracking stays informational only — never a diagnosis.</p>
+        <div class="pb-4 border-b-2 border-csDark flex items-center space-x-4">
+          <img src="assets/logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CycleSafe Logo" class="w-16 h-16 rounded-2xl border-2 border-csDark bg-white object-cover sui-shadow-sm flex-shrink-0">
+          <div>
+            <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">NEW USER REGISTRATION</span>
+            <h2 class="gasoek-font text-3xl sm:text-4xl text-csDark mt-0.5">CREATE YOUR PROFILE</h2>
+            <p class="text-xs sm:text-sm text-csDark/80 font-medium mt-0.5">Create an email and password so you can sign back in later. Tracking stays informational only — never a diagnosis.</p>
+          </div>
         </div>
 
         <form onsubmit="handleSignUp(event)" class="space-y-6 font-mono text-xs">
@@ -894,7 +898,10 @@
   <footer class="bg-csDark text-csPrimary border-t-2 border-csDark py-12 px-4 sm:px-8 mt-20">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 font-mono text-xs">
       <div>
-        <div class="font-gasoek text-lg text-white">CYCLESAFE</div>
+        <div class="flex items-center space-x-3 mb-1">
+          <img src="assets/logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CycleSafe Logo" class="w-8 h-8 rounded-lg border border-white bg-white object-cover">
+          <div class="font-gasoek text-lg text-white">CYCLESAFE</div>
+        </div>
         <div class="text-csPrimary/70 mt-0.5">© 2026 CycleSafe Technologies. Zero Diagnostic Claims. Client-Encrypted Health Records.</div>
       </div>
       <div class="flex items-center space-x-4">

@@ -387,9 +387,22 @@ def get_doctor_report_pdf(user_id: str = "demo_user", authorization: Optional[st
     )
 
 # Static frontend mounting and SPA root route
-frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend"))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+frontend_dir = os.path.join(project_root, "frontend")
+assets_dir = os.path.join(project_root, "assets")
+
+if os.path.exists(assets_dir):
+    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
 if os.path.exists(frontend_dir):
     app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+
+    @app.get("/logo.png")
+    def serve_logo():
+        logo_path = os.path.join(project_root, "logo.png")
+        if os.path.exists(logo_path):
+            return FileResponse(logo_path)
+        raise HTTPException(status_code=404, detail="Logo not found")
 
     @app.get("/")
     def serve_frontend_root():

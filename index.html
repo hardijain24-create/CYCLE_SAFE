@@ -95,7 +95,7 @@
   <!-- PERSISTENT TOP NAVIGATION -->
   <header class="sticky top-0 z-50 bg-csPrimary/95 backdrop-blur-md border-b-2 border-csDark px-4 lg:px-8 py-3.5 flex items-center justify-between">
     <div class="flex items-center space-x-3 cursor-pointer" onclick="showView('landing')">
-      <div class="w-10 h-10 rounded-xl bg-csAccent border-2 border-csDark flex items-center justify-center font-gasoek text-white text-xl sui-shadow-sm">CS</div>
+      <img src="assets/logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CycleSafe Logo" class="w-11 h-11 rounded-xl border-2 border-csDark bg-white object-cover sui-shadow-sm">
       <div class="flex flex-col">
         <span class="font-gasoek text-2xl tracking-tight text-csDark leading-none">CYCLESAFE</span>
         <span class="font-mono text-[10px] text-csAccent font-bold uppercase tracking-widest">Health History & Patterns</span>
@@ -104,24 +104,24 @@
 
     <!-- Nav links (adaptive based on life stage) -->
     <nav class="hidden xl:flex items-center space-x-1 font-mono text-xs font-bold text-csDark" id="main-nav-links">
-      <button id="nav-landing" onclick="showView('landing')" class="nav-btn px-3 py-1.5 rounded-lg border border-transparent hover:border-csDark hover:bg-csLightBg transition">OVERVIEW</button>
-      <button id="nav-dashboard" onclick="showView('dashboard')" class="nav-btn px-3 py-1.5 rounded-lg border border-transparent hover:border-csDark hover:bg-csLightBg transition">DASHBOARD</button>
-      <button id="nav-log" onclick="showView('log')" class="nav-btn px-3 py-1.5 rounded-lg bg-csWarmBg border-2 border-csDark text-csDark font-bold hover:bg-amber-300 transition flex items-center space-x-1 sui-shadow-sm">
-        <span>+</span><span>LOG TODAY</span>
-      </button>
-      <button id="nav-calendar" onclick="showView('calendar')" class="nav-btn px-3 py-1.5 rounded-lg border border-transparent hover:border-csDark hover:bg-csLightBg transition">CALENDAR</button>
-      <button id="nav-patterns" onclick="showView('patterns')" class="nav-btn px-3 py-1.5 rounded-lg border border-transparent hover:border-csDark hover:bg-csLightBg transition">PATTERNS</button>
-      <button id="nav-perimenopause" onclick="showView('perimenopause')" class="nav-btn px-3 py-1.5 rounded-lg border border-transparent hover:border-csDark hover:bg-csLightBg transition">PERIMENOPAUSE</button>
-      <button id="nav-doctor" onclick="showView('doctor')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-csAccent text-csAccent bg-csLightBg hover:bg-csAccent hover:text-white transition">DOCTOR REPORT</button>
-      <button id="nav-products" onclick="showView('products')" class="nav-btn px-3 py-1.5 rounded-lg border border-transparent hover:border-csDark hover:bg-csLightBg transition">FIND PRODUCTS</button>
-      <button id="nav-privacy" onclick="showView('privacy')" class="nav-btn px-3 py-1.5 rounded-lg border border-transparent hover:border-csDark hover:bg-csLightBg transition">PRIVACY</button>
+      <button id="nav-landing" onclick="showView('landing')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">OVERVIEW</button>
+      <button id="nav-dashboard" onclick="showView('dashboard')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">DASHBOARD</button>
+      <button id="nav-log" onclick="showView('log')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">+ LOG TODAY</button>
+      <button id="nav-calendar" onclick="showView('calendar')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">CALENDAR</button>
+      <button id="nav-patterns" onclick="showView('patterns')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PATTERNS</button>
+      <button id="nav-perimenopause" onclick="showView('perimenopause')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PERIMENOPAUSE</button>
+      <button id="nav-doctor" onclick="showView('doctor')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">DOCTOR REPORT</button>
+      <button id="nav-products" onclick="showView('products')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">FIND PRODUCTS</button>
+      <button id="nav-privacy" onclick="showView('privacy')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PRIVACY</button>
     </nav>
 
-    <!-- Quick action auth/profile -->
+    <!-- Quick action auth/profile — shown/hidden based on whether user has signed up -->
     <div class="flex items-center space-x-3">
-      <button onclick="showView('auth')" class="hidden sm:inline-flex font-mono text-xs font-bold px-3 py-2 rounded-lg border-2 border-csDark hover:bg-csLightBg transition">SIGN IN</button>
-      <button onclick="showView('signup')" class="font-mono text-xs font-bold px-4 py-2 rounded-lg bg-csAccent text-white border-2 border-csDark sui-shadow-sm hover:translate-x-[1px] hover:translate-y-[1px] transition">SIGN UP</button>
-      <button id="header-profile-btn" onclick="showView('profile')" class="w-9 h-9 rounded-full bg-csWarmBg border-2 border-csDark flex items-center justify-center font-mono text-xs font-bold text-csDark hover:bg-csPink transition" title="Profile">JD</button>
+      <div id="auth-buttons" class="flex items-center space-x-2">
+        <button onclick="showView('auth')" class="hidden sm:inline-flex font-mono text-xs font-bold px-3 py-2 rounded-lg border-2 border-csDark hover:bg-csLightBg transition">SIGN IN</button>
+        <button onclick="showView('signup')" class="font-mono text-xs font-bold px-4 py-2 rounded-lg bg-csAccent text-white border-2 border-csDark sui-shadow-sm hover:opacity-90 transition">SIGN UP</button>
+      </div>
+      <button id="header-profile-btn" onclick="showView('profile')" class="w-9 h-9 rounded-full bg-csWarmBg border-2 border-csDark flex items-center justify-center font-mono text-xs font-bold text-csDark hover:bg-csPink transition" title="My Profile">?</button>
     </div>
   </header>
 
@@ -194,7 +194,7 @@
       <section class="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-b-2 border-csDark">
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
           <div>
-            <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block mb-2">// 03-STEP CONTINUUM</span>
+            <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block mb-2">HOW IT WORKS</span>
             <h2 class="gasoek-font text-4xl sm:text-5xl md:text-6xl text-csDark leading-tight">TRACK WHAT CHANGES.</h2>
           </div>
         </div>
@@ -458,29 +458,76 @@
     <!-- VIEW 5: PATTERNS -->
     <section id="view-patterns" class="view-section hidden py-10 px-4 sm:px-8 max-w-7xl mx-auto space-y-8">
       <div class="pb-6 border-b-2 border-csDark">
-        <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">EVIDENCE-INFORMED OBSERVATIONS</span>
-        <h1 class="gasoek-font text-4xl sm:text-5xl text-csDark">CYCLE & SYMPTOM PATTERNS</h1>
-        <p class="text-sm text-csDark/80 font-medium mt-1">Non-diagnostic algorithmic tracking of shifts, timing stability, and symptom clusters.</p>
+        <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">YOUR HEALTH OVER TIME</span>
+        <h1 class="gasoek-font text-4xl sm:text-5xl text-csDark">CYCLE PATTERNS</h1>
+        <p class="text-sm text-csDark/80 font-medium mt-1 max-w-2xl">This page analyses everything you've logged — your period dates, symptoms, flow heaviness, sleep, mood — and shows you patterns over time. The more you log, the clearer your picture becomes.</p>
       </div>
 
+      <!-- What is this page? Explainer -->
+      <div class="bg-csLightBg border-2 border-csDark rounded-2xl p-6 flex items-start space-x-4">
+        <div class="text-3xl">🔍</div>
+        <div>
+          <h3 class="gasoek-font text-xl text-csDark mb-1">WHAT DOES THIS PAGE DO?</h3>
+          <p class="text-sm text-csDark/80">Patterns watches your logged entries and highlights three things: <strong>how regular your cycle length is</strong>, <strong>which symptoms keep appearing together</strong>, and <strong>how heavy your flow has been</strong>. This is not a diagnosis — it's your personal health history, summarised clearly so you can spot changes and talk to your doctor more confidently.</p>
+        </div>
+      </div>
+
+      <!-- Three pattern cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-csLightBg border-2 border-csDark rounded-2xl p-6 sui-shadow space-y-3">
-          <span class="pill-tag bg-csAccent text-white px-2 py-0.5">TIMING VARIANCE</span>
-          <h3 class="gasoek-font text-2xl text-csDark">CYCLE LENGTH STABILITY</h3>
-          <p class="text-xs text-csDark/80" id="pat-stability-text">Awaiting cycle logs. Log your period dates to calculate personal median duration and timing variance.</p>
+
+        <!-- Card 1: Cycle Timing -->
+        <div class="bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow space-y-4">
+          <div class="flex items-center space-x-3 pb-3 border-b-2 border-csDark">
+            <span class="text-2xl">📅</span>
+            <div>
+              <span class="pill-tag bg-csAccent text-white px-2 py-0.5 text-[10px]">TIMING</span>
+              <h3 class="gasoek-font text-xl text-csDark mt-0.5">CYCLE REGULARITY</h3>
+            </div>
+          </div>
+          <p class="text-xs text-csDark/80" id="pat-stability-text">No cycles logged yet. When you log your period start dates, this will calculate your average cycle length and show whether your timing is consistent or varies a lot.</p>
+          <div class="bg-csLightBg rounded-xl p-3 font-mono text-xs space-y-1">
+            <div class="flex justify-between text-csDark/70"><span>Average length:</span><span id="pat-avg-length" class="font-bold text-csDark">— days</span></div>
+            <div class="flex justify-between text-csDark/70"><span>Entries logged:</span><span id="pat-entries-count" class="font-bold text-csDark">0</span></div>
+          </div>
         </div>
 
-        <div class="bg-csWarmBg border-2 border-csDark rounded-2xl p-6 sui-shadow space-y-3">
-          <span class="pill-tag bg-csSecondaryAccent text-csDark px-2 py-0.5">CO-OCCURRENCE</span>
-          <h3 class="gasoek-font text-2xl text-csDark">SYMPTOM CLUSTERS</h3>
-          <p class="text-xs text-csDark/80" id="pat-clusters-text">No recurring symptom clusters detected yet. Daily symptom logs will reveal co-occurrences here.</p>
+        <!-- Card 2: Symptom Clusters -->
+        <div class="bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow space-y-4">
+          <div class="flex items-center space-x-3 pb-3 border-b-2 border-csDark">
+            <span class="text-2xl">🩺</span>
+            <div>
+              <span class="pill-tag bg-csSecondaryAccent text-csDark px-2 py-0.5 text-[10px]">SYMPTOMS</span>
+              <h3 class="gasoek-font text-xl text-csDark mt-0.5">RECURRING SYMPTOMS</h3>
+            </div>
+          </div>
+          <p class="text-xs text-csDark/80" id="pat-clusters-text">No symptoms logged yet. When you log symptoms like cramps, fatigue or headaches, this will show which ones appear most often so you can tell your doctor about recurring patterns.</p>
+          <div id="pat-symptom-tags" class="flex flex-wrap gap-1.5 min-h-[28px]">
+            <span class="font-mono text-[10px] text-csDark/50 italic">Symptoms will appear here once logged</span>
+          </div>
         </div>
 
-        <div class="bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow-accent space-y-3">
-          <span class="pill-tag bg-csDark text-white px-2 py-0.5">VOLUME INDICATOR</span>
-          <h3 class="gasoek-font text-2xl text-csAccent">FLOW INTENSITY CHECK</h3>
-          <p class="text-xs text-csDark/80" id="pat-flow-text">No flow entries recorded yet. Track flow volume to monitor heaviness indicators and soaking frequency.</p>
+        <!-- Card 3: Flow Intensity -->
+        <div class="bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow space-y-4">
+          <div class="flex items-center space-x-3 pb-3 border-b-2 border-csDark">
+            <span class="text-2xl">💧</span>
+            <div>
+              <span class="pill-tag bg-csDark text-white px-2 py-0.5 text-[10px]">FLOW</span>
+              <h3 class="gasoek-font text-xl text-csDark mt-0.5">FLOW HEAVINESS</h3>
+            </div>
+          </div>
+          <p class="text-xs text-csDark/80" id="pat-flow-text">No flow data yet. Once you log flow intensity (spotting, moderate, or heavy), this will track whether your periods are getting heavier or lighter over time — useful information for doctor visits.</p>
+          <div class="bg-csLightBg rounded-xl p-3 font-mono text-xs space-y-1">
+            <div class="flex justify-between text-csDark/70"><span>Soaking flag raised:</span><span id="pat-soaking-flag" class="font-bold text-csDark">No</span></div>
+            <div class="flex justify-between text-csDark/70"><span>Most common flow:</span><span id="pat-common-flow" class="font-bold text-csDark">—</span></div>
+          </div>
         </div>
+      </div>
+
+      <!-- Log prompt if empty -->
+      <div id="pat-empty-prompt" class="hidden bg-csWarmBg border-2 border-csDark rounded-2xl p-6 text-center space-y-3">
+        <p class="gasoek-font text-2xl text-csDark">START LOGGING TO SEE YOUR PATTERNS</p>
+        <p class="font-mono text-xs text-csDark/80">Log your period and symptoms daily — patterns need at least a few entries to appear.</p>
+        <button onclick="showView('log')" class="font-mono text-xs font-bold px-6 py-3 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow-sm">+ LOG TODAY</button>
       </div>
     </section>
 
@@ -646,9 +693,10 @@
     <!-- VIEW 10: AUTH / SIGN IN -->
     <section id="view-auth" class="view-section hidden py-16 px-4 sm:px-8 max-w-lg mx-auto">
       <div class="bg-white border-4 border-csDark rounded-3xl p-8 sui-shadow space-y-6">
-        <div class="text-center pb-3 border-b-2 border-csDark">
+        <div class="text-center pb-3 border-b-2 border-csDark flex flex-col items-center">
+          <img src="assets/logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CycleSafe Logo" class="w-16 h-16 rounded-2xl border-2 border-csDark bg-white object-cover sui-shadow-sm mb-2">
           <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest">ACCESS ARCHIVE</span>
-          <h2 class="gasoek-font text-3xl text-csDark mt-1">SIGN IN</h2>
+          <h2 class="gasoek-font text-3xl text-csDark mt-0.5">SIGN IN</h2>
         </div>
         <form onsubmit="handleSignIn(event)" class="space-y-4 font-mono text-xs">
           <div>
@@ -673,10 +721,13 @@
     <!-- VIEW 11: SIGN UP (NEW COMPREHENSIVE REGISTRATION) -->
     <section id="view-signup" class="view-section hidden py-12 px-4 sm:px-8 max-w-2xl mx-auto">
       <div class="bg-white border-4 border-csDark rounded-3xl p-8 sm:p-10 sui-shadow space-y-8">
-        <div class="pb-4 border-b-2 border-csDark">
-          <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">NEW USER REGISTRATION</span>
-          <h2 class="gasoek-font text-4xl text-csDark mt-1">CREATE YOUR PROFILE</h2>
-          <p class="text-sm text-csDark/80 font-medium mt-1">Create an email and password so you can sign back in later. Tracking stays informational only — never a diagnosis.</p>
+        <div class="pb-4 border-b-2 border-csDark flex items-center space-x-4">
+          <img src="assets/logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CycleSafe Logo" class="w-16 h-16 rounded-2xl border-2 border-csDark bg-white object-cover sui-shadow-sm flex-shrink-0">
+          <div>
+            <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">NEW USER REGISTRATION</span>
+            <h2 class="gasoek-font text-3xl sm:text-4xl text-csDark mt-0.5">CREATE YOUR PROFILE</h2>
+            <p class="text-xs sm:text-sm text-csDark/80 font-medium mt-0.5">Create an email and password so you can sign back in later. Tracking stays informational only — never a diagnosis.</p>
+          </div>
         </div>
 
         <form onsubmit="handleSignUp(event)" class="space-y-6 font-mono text-xs">
@@ -847,7 +898,10 @@
   <footer class="bg-csDark text-csPrimary border-t-2 border-csDark py-12 px-4 sm:px-8 mt-20">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 font-mono text-xs">
       <div>
-        <div class="font-gasoek text-lg text-white">CYCLESAFE</div>
+        <div class="flex items-center space-x-3 mb-1">
+          <img src="assets/logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CycleSafe Logo" class="w-8 h-8 rounded-lg border border-white bg-white object-cover">
+          <div class="font-gasoek text-lg text-white">CYCLESAFE</div>
+        </div>
         <div class="text-csPrimary/70 mt-0.5">© 2026 CycleSafe Technologies. Zero Diagnostic Claims. Client-Encrypted Health Records.</div>
       </div>
       <div class="flex items-center space-x-4">

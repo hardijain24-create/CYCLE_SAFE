@@ -285,18 +285,37 @@
               Your 4-phase cycle timeline will display here after you log your first period.
             </div>
           </div>
+
+          <!-- 6-Cycle History Strip -->
+          <div>
+            <div class="font-mono text-[10px] font-bold text-csDark/60 uppercase tracking-widest mb-2">6-MONTH CYCLE LOG</div>
+            <div id="dash-cycle-strip" class="flex space-x-3 overflow-x-auto pb-2"></div>
+          </div>
+
+          <!-- Pattern Flags -->
+          <div>
+            <div class="font-mono text-[10px] font-bold text-csDark/60 uppercase tracking-widest mb-2">PATTERN FLAGS (WHO-CITED RULES)</div>
+            <div id="dash-flags-feed" class="space-y-2"></div>
+          </div>
         </div>
 
         <!-- History/Baseline Card -->
-        <div class="lg:col-span-4 bg-csWarmBg border-2 border-csDark rounded-3xl p-7 sui-shadow flex flex-col justify-between space-y-4">
-          <div>
-            <span class="pill-tag bg-csDark text-csWarmBg px-2.5 py-1">STABILITY RECORD</span>
-            <h3 class="gasoek-font text-2xl text-csDark mt-3">RECORDED HISTORY</h3>
-            <p id="dash-history-desc" class="text-xs text-csDark/80 mt-2 font-medium">0 cycles recorded. Start logging your period flow to build your longitudinal personal baseline.</p>
+        <div class="lg:col-span-4 space-y-5">
+          <div class="bg-csWarmBg border-2 border-csDark rounded-3xl p-7 sui-shadow flex flex-col justify-between space-y-4">
+            <div>
+              <span class="pill-tag bg-csDark text-csWarmBg px-2.5 py-1">STABILITY RECORD</span>
+              <h3 class="gasoek-font text-2xl text-csDark mt-3">RECORDED HISTORY</h3>
+              <p id="dash-history-desc" class="text-xs text-csDark/80 mt-2 font-medium">0 cycles recorded. Start logging your period flow to build your longitudinal personal baseline.</p>
+            </div>
+            <div class="bg-white/80 p-3 rounded-xl border border-csDark font-mono text-xs space-y-1">
+              <div class="flex justify-between"><span>Personal Median:</span><span id="dash-median-days" class="font-bold text-csAccent">—</span></div>
+              <div class="flex justify-between"><span>Conformal Window:</span><span id="dash-conformal-range" class="font-bold text-csDark">Requires Logged Cycle</span></div>
+            </div>
           </div>
-          <div class="bg-white/80 p-3 rounded-xl border border-csDark font-mono text-xs space-y-1">
-            <div class="flex justify-between"><span>Personal Median:</span><span id="dash-median-days" class="font-bold text-csAccent">—</span></div>
-            <div class="flex justify-between"><span>Conformal Window:</span><span id="dash-conformal-range" class="font-bold text-csDark">Requires Logged Cycle</span></div>
+
+          <!-- Conformal Forecast Box -->
+          <div id="dash-forecast-box" class="bg-white border-2 border-csDark rounded-3xl p-6 sui-shadow space-y-3">
+            <span class="font-mono text-xs font-bold text-csDark/50">Log 3+ cycles to activate conformal forecast.</span>
           </div>
         </div>
       </div>
@@ -311,9 +330,9 @@
           <span class="gasoek-font text-xl text-csSecondaryAccent">PATTERNS →</span>
           <p class="text-xs text-csDark/80 mt-2">Check non-diagnostic timing rules and cluster alerts.</p>
         </div>
-        <div onclick="showView('products')" class="cursor-pointer bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow hover:bg-csPink transition">
+        <div onclick="showView('products'); setTimeout(loadMapFromAPI, 200);" class="cursor-pointer bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow hover:bg-csPink transition">
           <span class="gasoek-font text-xl text-csDark">FIND PRODUCTS →</span>
-          <p class="text-xs text-csDark/80 mt-2">Emergency dispensers, public access supplies, and community mutual aid.</p>
+          <p class="text-xs text-csDark/80 mt-2">Emergency dispensers, public access supplies, and community mutual aid. Mumbai · Delhi · Bengaluru.</p>
         </div>
       </div>
     </section>
@@ -599,9 +618,17 @@
           <div><span class="text-csDark/60 block">HISTORICAL MEDIAN:</span><span id="doc-historical-median" class="font-bold text-csAccent">— (AWAITING LOGS)</span></div>
         </div>
 
+        <!-- Cycle History Table -->
+        <div id="doc-cycle-history-table" class="overflow-x-auto"></div>
+
+        <div class="space-y-2">
+          <h4 class="font-mono text-xs font-bold text-csDark uppercase">SYMPTOM FREQUENCY (ACROSS ALL LOGGED CYCLES)</h4>
+          <div id="doc-symptom-freq" class="flex flex-wrap gap-2"><span class="text-xs text-csDark/60">Loading...</span></div>
+        </div>
+
         <div class="space-y-2">
           <h4 class="font-mono text-xs font-bold text-csDark uppercase">DISCUSSION POINTS FOR PHYSICIAN</h4>
-          <ul id="doc-discussion-points" class="list-disc pl-5 font-mono text-xs text-csDark space-y-1">
+          <ul id="doc-discussion-points" class="list-disc pl-5 font-mono text-xs text-csDark space-y-1.5">
             <li class="italic text-csDark/70">No period cycles recorded yet in this profile. Summary discussion points will generate automatically when the patient logs cycles.</li>
             <li>Client-side encryption active. Longitudinal stability indicators will appear once tracking commences.</li>
           </ul>
@@ -897,7 +924,15 @@
       city: "Mumbai"
     };
 
-    // Array of user-logged period entries: [{ date: 'YYYY-MM-DD', flow: 1..3, cycleLength: 28, pain: 1, sleep: 2, fatigue: 1, mood: 2, symptoms: ['cramps'] }]
+    // Array of user-logged period entries
+    const DEMO_CYCLES = [
+      { date: '2026-03-01', flow: 2, cycleLength: 29, pain: 1, sleep: 2, fatigue: 1, mood: 2, hourlySoaking: false, symptoms: ['cramps', 'bloating'] },
+      { date: '2026-03-30', flow: 3, cycleLength: 28, pain: 2, sleep: 2, fatigue: 2, mood: 1, hourlySoaking: false, symptoms: ['cramps', 'headache', 'fatigue'] },
+      { date: '2026-04-27', flow: 2, cycleLength: 28, pain: 1, sleep: 3, fatigue: 1, mood: 2, hourlySoaking: false, symptoms: ['bloating'] },
+      { date: '2026-05-25', flow: 2, cycleLength: 31, pain: 1, sleep: 2, fatigue: 1, mood: 2, hourlySoaking: false, symptoms: ['cramps', 'mood_change'] },
+      { date: '2026-06-25', flow: 3, cycleLength: 27, pain: 2, sleep: 1, fatigue: 2, mood: 1, hourlySoaking: false, symptoms: ['cramps', 'fatigue', 'headache'] },
+      { date: '2026-07-22', flow: 2, cycleLength: 28, pain: 1, sleep: 2, fatigue: 1, mood: 2, hourlySoaking: false, symptoms: ['bloating', 'cramps'] },
+    ];
     let userLoggedPeriods = [];
 
     // Load persisted state if available
@@ -906,7 +941,13 @@
       if (savedProfile) userProfile = JSON.parse(savedProfile);
       
       const savedLogs = localStorage.getItem('cs_user_logged_periods');
-      if (savedLogs) userLoggedPeriods = JSON.parse(savedLogs);
+      if (savedLogs) {
+        userLoggedPeriods = JSON.parse(savedLogs);
+      } else {
+        // First visit — seed with 6 demo cycles so dashboard, forecast and doctor report are populated
+        userLoggedPeriods = DEMO_CYCLES;
+        try { localStorage.setItem('cs_user_logged_periods', JSON.stringify(userLoggedPeriods)); } catch (e) {}
+      }
     } catch (e) {
       console.warn("Storage read error", e);
     }
@@ -964,75 +1005,137 @@
       if (topBadge) topBadge.textContent = stageLabels[userProfile.stage] || "REGULAR MENSTRUAL STAGE";
       if (stageBanner) stageBanner.textContent = (stageLabels[userProfile.stage] || "REGULAR MENSTRUAL STAGE") + " PROFILE";
 
-      // CHECK IF FIRST-TIME USER HAS LOGGED ANY PERIOD YET
       const flowLogs = userLoggedPeriods.filter(l => l.flow > 0);
 
       if (flowLogs.length === 0) {
-        // FIRST TIME USER: ZERO EXAMPLE DATA STATE
         if (cyclePill) cyclePill.textContent = "NO LOGS YET";
         if (cycleMeta) cycleMeta.textContent = "AWAITING FIRST LOG";
         if (cycleTitle) cycleTitle.textContent = "NO ACTIVE CYCLE RECORDED";
         if (cycleDesc) cycleDesc.textContent = "Your calendar and timeline start completely clean. Tap '+ LOG TODAY' to log your current cycle or last period start date.";
-        if (timelineWrap) {
-          timelineWrap.innerHTML = '<div class="w-full py-4 border-2 border-dashed border-csDark/30 rounded-xl bg-white/50 text-center font-mono text-xs text-csDark/60">Your 4-phase cycle timeline will display here after you log your first period.</div>';
-        }
+        if (timelineWrap) timelineWrap.innerHTML = '<div class="w-full py-4 border-2 border-dashed border-csDark/30 rounded-xl bg-white/50 text-center font-mono text-xs text-csDark/60">Your 4-phase cycle timeline will display here after you log your first period.</div>';
         if (histDesc) histDesc.textContent = "0 cycles recorded. Start logging your period flow to build your longitudinal personal baseline.";
         if (medDays) medDays.textContent = "—";
         if (confRange) confRange.textContent = "Requires Logged Cycle";
       } else {
-        // USER HAS LOGGED AT LEAST ONE PERIOD: Calculate real status
         const lastPeriod = flowLogs[flowLogs.length - 1];
         const lastDate = new Date(lastPeriod.date);
-        const today = new Date("2026-09-26"); // context date
+        const today = new Date();
         const diffDays = Math.max(1, Math.floor((today - lastDate) / (1000 * 60 * 60 * 24)));
         const cycleLen = lastPeriod.cycleLength || 28;
 
-        if (cyclePill) cyclePill.textContent = "CURRENT CYCLE";
-        if (cycleMeta) cycleMeta.textContent = `DAY ${diffDays} OF ${cycleLen}`;
+        // Conformal forecast: median of all logged cycle lengths ± MAD
+        const lens = flowLogs.map(l => l.cycleLength || 28);
+        const sortedLens = [...lens].sort((a,b) => a-b);
+        const mid = Math.floor(sortedLens.length / 2);
+        const medianLen = sortedLens.length % 2 === 0 ? (sortedLens[mid-1] + sortedLens[mid]) / 2 : sortedLens[mid];
+        const mad = sortedLens.reduce((s,v) => s + Math.abs(v - medianLen), 0) / sortedLens.length;
+        const lo80 = Math.max(15, Math.round(medianLen - 1.28 * mad));
+        const hi80 = Math.round(medianLen + 1.28 * mad);
+        const lo90 = Math.max(15, Math.round(medianLen - 1.65 * mad));
+        const hi90 = Math.round(medianLen + 1.65 * mad);
 
-        let phase = "LUTEAL";
-        let phaseDesc = "Progesterone Window. Next estimated flow window based on personal baseline.";
-        if (diffDays <= 5) {
-          phase = "MENSTRUAL";
-          phaseDesc = "Active menstrual flow phase recorded.";
-        } else if (diffDays <= 12) {
-          phase = "FOLLICULAR";
-          phaseDesc = "Follicular development window.";
-        } else if (diffDays <= 16) {
-          phase = "OVULATION";
-          phaseDesc = "Estimated fertile peak window.";
-        }
+        if (cyclePill) cyclePill.textContent = "CURRENT CYCLE";
+        if (cycleMeta) cycleMeta.textContent = `DAY ${diffDays} OF ~${Math.round(medianLen)}`;
+
+        let phase = "LUTEAL", phaseDesc = "Progesterone phase — pre-menstrual window. Pattern summary based on personal baseline.";
+        if (diffDays <= 5) { phase = "MENSTRUAL"; phaseDesc = "Active menstrual flow phase. WHO notes pain and flow heaviness should be monitored longitudinally."; }
+        else if (diffDays <= 12) { phase = "FOLLICULAR"; phaseDesc = "Post-flow follicular development window."; }
+        else if (diffDays <= 16) { phase = "OVULATION"; phaseDesc = "Estimated fertile peak window based on personal median baseline."; }
 
         if (cycleTitle) cycleTitle.textContent = `CYCLE DAY ${diffDays} · ${phase}`;
         if (cycleDesc) cycleDesc.textContent = phaseDesc;
-        if (medDays) medDays.textContent = `${cycleLen}.0 Days`;
-        if (confRange) confRange.textContent = `${cycleLen - 2}.0 - ${cycleLen + 2}.0 d`;
+        if (medDays) medDays.textContent = `${medianLen.toFixed(1)} Days`;
+        if (confRange) confRange.textContent = `${lo80} – ${hi80} d (80%)`;
 
         if (timelineWrap) {
+          const dayPct = Math.min(100, Math.round((diffDays / medianLen) * 100));
           timelineWrap.innerHTML = `
             <div class="w-full h-8 border-2 border-csDark rounded-xl bg-white overflow-hidden flex p-1 space-x-1">
-              <div class="h-full bg-csAccent rounded-lg w-[18%]" title="Flow (Days 1-5)"></div>
-              <div class="h-full bg-csPink rounded-lg w-[28%]" title="Follicular"></div>
-              <div class="h-full bg-csPurple rounded-lg w-[14%]" title="Ovulation"></div>
-              <div class="h-full bg-csWarmBg rounded-lg w-[40%]" title="Luteal"></div>
+              <div class="h-full bg-csAccent rounded-lg" style="width:18%" title="Flow (Days 1-5)"></div>
+              <div class="h-full bg-csPink rounded-lg" style="width:28%" title="Follicular"></div>
+              <div class="h-full bg-csPurple rounded-lg" style="width:14%" title="Ovulation"></div>
+              <div class="h-full bg-csWarmBg rounded-lg" style="width:40%" title="Luteal"></div>
             </div>
-            <div class="flex justify-between font-mono text-[10px] text-csDark/70 font-bold uppercase">
-              <span>● Flow Phase</span>
-              <span>● Follicular Phase</span>
-              <span>● Fertile Peak</span>
-              <span>● Luteal Phase</span>
+            <div class="flex justify-between font-mono text-[10px] text-csDark/70 font-bold uppercase mt-1">
+              <span>● Flow</span><span>● Follicular</span><span>● Fertile Peak</span><span>● Luteal</span>
             </div>
-          `;
+            <div class="mt-3 text-[11px] font-mono text-csDark/60 italic">Progress: Day ${diffDays} of estimated ${Math.round(medianLen)}-day cycle · ${dayPct}% through current cycle</div>`;
+        }
+
+        // Cycle history strip (last 6)
+        const histStrip = document.getElementById('dash-cycle-strip');
+        if (histStrip) {
+          const recent = flowLogs.slice(-6);
+          const flowLabels = ['', 'LIGHT', 'MEDIUM', 'HEAVY'];
+          const flowColors = ['', 'bg-csPink text-csDark', 'bg-csAccent text-white', 'bg-rose-700 text-white'];
+          histStrip.innerHTML = recent.map((c, i) => `
+            <div class="bg-white border-2 border-csDark rounded-xl p-3 flex flex-col items-center space-y-1.5 min-w-[90px] sui-shadow-sm">
+              <span class="font-mono text-[9px] text-csDark/50 font-bold">${c.date ? c.date.slice(5) : ''}</span>
+              <span class="gasoek-font text-2xl text-csDark">${c.cycleLength}d</span>
+              <span class="pill-tag ${flowColors[c.flow] || 'bg-csLightBg text-csDark'} px-1.5 py-0.5 text-[8px]">${flowLabels[c.flow] || 'FLOW'}</span>
+              ${c.pain >= 2 ? '<span class="text-[9px] font-mono text-csAccent font-bold">PAIN '+c.pain+'/3</span>' : '<span class="text-[9px] font-mono text-csDark/40">PAIN '+c.pain+'/3</span>'}
+            </div>`).join('');
+        }
+
+        // Pattern flags (WHO-cited rules)
+        const flagsFeed = document.getElementById('dash-flags-feed');
+        if (flagsFeed) {
+          const flags = [];
+          const maxLen = Math.max(...lens.slice(-3)), minLen = Math.min(...lens.slice(-3));
+          if (lens.length >= 3 && (maxLen - minLen) >= 7)
+            flags.push({ urgency: 'MODERATE', msg: 'Cycle length variance ≥7 days across last 3 cycles.', detail: `Spread: ${maxLen-minLen}d. WHO notes irregular/infrequent menstruation can be a reason to seek care.`, color: 'bg-csWarmBg' });
+          if (flowLogs.some(l => l.hourlySoaking))
+            flags.push({ urgency: 'ATTENTION', msg: 'Hourly pad/tampon soaking logged.', detail: 'WHO identifies heavy bleeding as a worrisome symptom warranting clinical discussion.', color: 'bg-rose-100' });
+          if (flowLogs.filter(l => l.pain >= 2).length >= 2)
+            flags.push({ urgency: 'INFO', msg: 'Recurring moderate-to-severe pain in 2+ cycles.', detail: 'WHO notes persistent menstrual pain can be a reason to seek care. Not a diagnosis.', color: 'bg-csLightBg' });
+
+          if (flags.length === 0) {
+            flagsFeed.innerHTML = '<div class="p-4 bg-white/70 border-2 border-csDark rounded-xl text-center font-mono text-xs text-csDark">✨ No cautionary timing variance or pain shifts detected in recent records.</div>';
+          } else {
+            flagsFeed.innerHTML = flags.map(f => `<div class="p-4 ${f.color} border-2 border-csDark rounded-xl sui-shadow-sm flex items-start space-x-3">
+              <span class="text-xl">⚠️</span><div>
+                <div class="flex items-center space-x-2 mb-1">
+                  <span class="pill-tag bg-csAccent text-white px-2 py-0.5">${f.urgency}</span>
+                  <span class="font-bold text-xs text-csDark">${f.msg}</span>
+                </div>
+                <p class="font-mono text-[11px] text-csDark/80">${f.detail}</p>
+              </div></div>`).join('');
+          }
+        }
+
+        // Conformal forecast box
+        const fcBox = document.getElementById('dash-forecast-box');
+        if (fcBox) {
+          fcBox.innerHTML = `
+            <div class="flex items-center justify-between border-b-2 border-csDark pb-3">
+              <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest">CONFORMAL FORECAST</span>
+              <span class="pill-tag bg-csAccent text-white px-2 py-0.5 border border-csDark">${flowLogs.length} CYCLES CALIBRATED</span>
+            </div>
+            <div class="mt-4 flex items-baseline space-x-3">
+              <span class="gasoek-font text-5xl text-csDark">${medianLen.toFixed(1)}</span>
+              <span class="font-mono text-sm font-bold text-csDark/70">DAYS MEDIAN ESTIMATE</span>
+            </div>
+            <div class="mt-3 space-y-2 font-mono text-xs text-csDark">
+              <div class="flex justify-between bg-white/70 p-2 rounded-lg border border-csDark/30">
+                <span>80% Prediction Window:</span>
+                <span class="font-bold text-csAccent">${lo80} – ${hi80} Days</span>
+              </div>
+              <div class="flex justify-between bg-white/70 p-2 rounded-lg border border-csDark/30">
+                <span>90% Cautious Window:</span>
+                <span class="font-bold text-csDark">${lo90} – ${hi90} Days</span>
+              </div>
+            </div>
+            <p class="font-mono text-[10px] text-csDark/60 mt-3 italic">*Non-diagnostic statistical interval based on personal ${flowLogs.length}-cycle baseline. WHO recommends tracking to build longitudinal evidence for healthcare conversations.</p>`;
         }
       }
 
-      // Hide or show stages based on user's profile
+      // Hide/show perimenopause nav based on stage
       if (userProfile.stage === 'menopause') {
         if (timelineWrap) timelineWrap.classList.add('hidden');
         if (navPerimeno) navPerimeno.classList.add('hidden');
         if (cardCal) cardCal.classList.add('hidden');
         if (cycleTitle) cycleTitle.textContent = "POST-MENOPAUSE SYMPTOM MONITOR";
-        if (cycleDesc) cycleDesc.textContent = "Next-cycle prediction disabled (12+ consecutive months without period). Tracking ongoing vasomotor, sleep, and bone wellness.";
+        if (cycleDesc) cycleDesc.textContent = "Next-cycle prediction disabled. Tracking ongoing vasomotor, sleep, and bone wellness.";
       } else {
         if (timelineWrap) timelineWrap.classList.remove('hidden');
         if (navPerimeno) navPerimeno.classList.remove('hidden');
@@ -1140,26 +1243,96 @@
       if (docLoc) docLoc.textContent = (userProfile.city && userProfile.country) ? `${userProfile.city}, ${userProfile.country}` : (userProfile.country || 'Client-Stored');
 
       const flowLogs = userLoggedPeriods.filter(l => l.flow > 0);
+
       if (flowLogs.length === 0) {
         if (docMed) docMed.textContent = "— (AWAITING LOGS)";
         if (docPoints) {
           docPoints.innerHTML = `
-            <li class="italic text-csDark/70">No period cycles recorded yet in this profile. Summary discussion points will generate automatically when the patient logs cycles.</li>
+            <li class="italic text-csDark/70">No period cycles recorded yet in this profile.</li>
             <li>Client-side encryption active. Longitudinal stability indicators will appear once tracking commences.</li>
           `;
         }
-      } else {
-        const last = flowLogs[flowLogs.length - 1];
-        const len = last.cycleLength || 28;
-        if (docMed) docMed.textContent = `${len}.0 DAYS`;
-        const hasSoaking = userLoggedPeriods.some(l => l.hourlySoaking);
-        if (docPoints) {
-          docPoints.innerHTML = `
-            <li>Patient has logged ${flowLogs.length} active cycle flow window(s) to date.</li>
-            <li>Observed cycle length baseline centered around ${len} days.</li>
-            <li>${hasSoaking ? 'Episode of hourly soaking flagged for clinical review.' : 'Zero prolonged hourly soaking reported to date.'}</li>
-          `;
-        }
+        return;
+      }
+
+      // ── Compute longitudinal stats ──────────────────────────────────────────────
+      const lens = flowLogs.map(l => l.cycleLength || 28);
+      const sortedLens = [...lens].sort((a,b) => a-b);
+      const mid = Math.floor(sortedLens.length / 2);
+      const medianLen = sortedLens.length % 2 === 0 ? (sortedLens[mid-1] + sortedLens[mid]) / 2 : sortedLens[mid];
+      const avgLen = (lens.reduce((s,v) => s+v, 0) / lens.length).toFixed(1);
+      const maxLen = Math.max(...lens), minLen = Math.min(...lens);
+      const mad = (sortedLens.reduce((s,v) => s + Math.abs(v - medianLen), 0) / sortedLens.length).toFixed(1);
+      const lo80 = Math.max(15, Math.round(medianLen - 1.28 * mad)), hi80 = Math.round(medianLen + 1.28 * mad);
+
+      const avgPain = (flowLogs.reduce((s,l) => s + (l.pain||0), 0) / flowLogs.length).toFixed(1);
+      const avgMood = (flowLogs.reduce((s,l) => s + (l.mood||0), 0) / flowLogs.length).toFixed(1);
+      const avgSleep = (flowLogs.reduce((s,l) => s + (l.sleep||0), 0) / flowLogs.length).toFixed(1);
+      const heavyCount = flowLogs.filter(l => l.flow === 3).length;
+      const hasSoaking = flowLogs.some(l => l.hourlySoaking);
+      const highPainCycles = flowLogs.filter(l => l.pain >= 2).length;
+
+      // Symptom frequency
+      const symCounts = {};
+      flowLogs.forEach(l => (l.symptoms||[]).forEach(s => { symCounts[s] = (symCounts[s]||0) + 1; }));
+      const topSymptoms = Object.entries(symCounts).sort((a,b) => b[1]-a[1]).slice(0,5);
+
+      if (docMed) docMed.textContent = `${medianLen.toFixed(1)} DAYS (MEDIAN) · RANGE ${minLen}–${maxLen}d`;
+
+      // ── Cycle history table ─────────────────────────────────────────────────────
+      const histTable = document.getElementById('doc-cycle-history-table');
+      if (histTable) {
+        const flowLabels = ['', 'Light', 'Medium', 'Heavy'];
+        histTable.innerHTML = `
+          <table class="w-full border-2 border-csDark rounded-xl overflow-hidden font-mono text-xs">
+            <thead class="bg-csDark text-csPrimary">
+              <tr>
+                <th class="text-left px-3 py-2">DATE</th>
+                <th class="text-center px-2 py-2">CYCLE</th>
+                <th class="text-center px-2 py-2">FLOW</th>
+                <th class="text-center px-2 py-2">PAIN</th>
+                <th class="text-center px-2 py-2">MOOD</th>
+                <th class="text-center px-2 py-2">SLEEP</th>
+                <th class="text-left px-2 py-2">SYMPTOMS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${flowLogs.map((l,i) => `
+                <tr class="${i%2===0?'bg-white':'bg-csLightBg'} border-t border-csDark/20">
+                  <td class="px-3 py-2 font-bold">${l.date}</td>
+                  <td class="text-center px-2 py-2">${l.cycleLength}d</td>
+                  <td class="text-center px-2 py-2"><span class="pill-tag ${l.flow===3?'bg-csAccent text-white':l.flow===2?'bg-csPink text-csDark':'bg-csLightBg text-csDark'} px-1.5 py-0.5 text-[9px]">${flowLabels[l.flow]||'-'}</span></td>
+                  <td class="text-center px-2 py-2 ${l.pain>=2?'text-csAccent font-bold':''} ">${l.pain}/3</td>
+                  <td class="text-center px-2 py-2">${l.mood}/3</td>
+                  <td class="text-center px-2 py-2">${l.sleep}/3</td>
+                  <td class="px-2 py-2 text-[10px] text-csDark/70">${(l.symptoms||[]).join(', ')||'—'}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+      }
+
+      // ── Discussion points (DOCX spec) ───────────────────────────────────────────
+      if (docPoints) {
+        const points = [];
+        points.push(`Patient has logged <strong>${flowLogs.length} menstrual cycle(s)</strong> over the period ${flowLogs[0].date} to ${flowLogs[flowLogs.length-1].date}.`);
+        points.push(`Median cycle length: <strong>${medianLen.toFixed(1)} days</strong>. Average: ${avgLen} days. Observed range: ${minLen}–${maxLen} days. Variance (MAD): ±${mad} days.`);
+        points.push(`Conformal 80% prediction window for next cycle onset: <strong>${lo80}–${hi80} days</strong>. This is a non-diagnostic statistical interval, not a clinical prediction.`);
+        if (highPainCycles >= 2) points.push(`⚠️ Moderate-to-severe pain (score ≥2/3) recorded in <strong>${highPainCycles} of ${flowLogs.length} cycles</strong>. WHO notes that persistent menstrual pain can be a reason to seek care. [WHO Menstrual Health, June 2026]`);
+        if (heavyCount >= 2) points.push(`⚠️ Heavy flow (score 3/3) recorded in <strong>${heavyCount} cycle(s)</strong>. WHO identifies heavy bleeding as a worrisome symptom. [WHO Menstrual Health, June 2026]`);
+        if (hasSoaking) points.push(`⚠️ Hourly pad/tampon soaking episode logged — a marker of potentially heavy blood loss. WHO cites this as a reason to seek clinical discussion.`);
+        if (topSymptoms.length > 0) points.push(`Recurring symptoms: <strong>${topSymptoms.map(([k,v]) => k.replace(/_/g,' ') + ' (' + v + 'x)').join(', ')}</strong>. Tracking co-occurrence with cycle phase may help clinical discussion.`);
+        points.push(`Avg pain: ${avgPain}/3 · Avg mood: ${avgMood}/3 · Avg sleep: ${avgSleep}/3 across logged cycles.`);
+        points.push(`All data is self-reported and informational only. <strong>This report is NOT a diagnosis.</strong> CycleSafe is a tracking tool — clinical assessment requires a qualified healthcare professional.`);
+
+        docPoints.innerHTML = points.map(p => `<li class="leading-relaxed">${p}</li>`).join('');
+      }
+
+      // ── Symptom frequency tags ─────────────────────────────────────────────────
+      const symTag = document.getElementById('doc-symptom-freq');
+      if (symTag) {
+        symTag.innerHTML = topSymptoms.length > 0
+          ? topSymptoms.map(([k,v]) => `<span class="pill-tag bg-csWarmBg border border-csDark px-2.5 py-1 text-xs text-csDark">${k.replace(/_/g,' ')}: ${v}x</span>`).join(' ')
+          : '<span class="text-xs text-csDark/60">No symptoms recorded yet.</span>';
       }
     }
 

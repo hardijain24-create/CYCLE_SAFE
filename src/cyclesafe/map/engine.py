@@ -85,30 +85,88 @@ class ProductAccessMapEngine:
     def _seed_demo_data(self):
         now = datetime.now(timezone.utc)
         demo_points = [
-            AccessPoint("loc_01", "Dadar Central Station Restroom", "Mumbai", "India", 19.0178, 72.8478, "transit_station", "low", ["sanitary_pads"], True, now - timedelta(hours=4), 1, True, ["low"], set(), set()),
-            AccessPoint("loc_02", "IIT Bombay Student Center", "Mumbai", "India", 19.1334, 72.9133, "university", "stocked", ["sanitary_pads", "tampons", "pain_relief"], True, now - timedelta(hours=12), 1, True, ["stocked"], set(), set()),
-            AccessPoint("loc_03", "Churchgate Station Community Desk", "Mumbai", "India", 18.9322, 72.8264, "transit_station", "empty", [], True, now - timedelta(hours=85), 1, True, ["empty"], set(), set()),
-            AccessPoint("loc_04", "Connaught Place Public Restroom", "New Delhi", "India", 28.6315, 77.2167, "public_restroom", "stocked", ["sanitary_pads"], True, now - timedelta(hours=2), 1, True, ["stocked"], set(), set()),
-            AccessPoint("loc_05", "Koramangala Community Health Hub", "Bengaluru", "India", 12.9352, 77.6245, "community_center", "stocked", ["sanitary_pads", "tampons"], True, now - timedelta(hours=1), 1, True, ["stocked"], set(), set()),
+            # ── MUMBAI (6 locations) ──────────────────────────────────────────────
+            AccessPoint("mum_01", "Dadar Central Station – Women's Restroom Dispenser", "Mumbai", "India",
+                        19.0178, 72.8478, "transit_station", "low",
+                        ["sanitary_pads"], True, now - timedelta(hours=4), 3, True, ["low", "stocked", "low"], set(), set()),
+            AccessPoint("mum_02", "IIT Bombay – Student Wellness Centre", "Mumbai", "India",
+                        19.1334, 72.9133, "university", "stocked",
+                        ["sanitary_pads", "tampons", "pain_relief", "menstrual_cups"], True, now - timedelta(hours=2), 8, True, ["stocked", "stocked", "stocked"], set(), set()),
+            AccessPoint("mum_03", "Churchgate Station – Community Desk", "Mumbai", "India",
+                        18.9322, 72.8264, "transit_station", "empty",
+                        [], True, now - timedelta(hours=85), 1, True, ["empty"], set(), set()),
+            AccessPoint("mum_04", "Andheri East – NGO Health Kiosk (SNEHA)", "Mumbai", "India",
+                        19.1136, 72.8697, "community_center", "stocked",
+                        ["sanitary_pads", "tampons", "wipes"], True, now - timedelta(hours=6), 5, True, ["stocked", "stocked", "low"], set(), set()),
+            AccessPoint("mum_05", "Bandra Kurla Complex – Corporate Wellness Hub", "Mumbai", "India",
+                        19.0607, 72.8662, "community_center", "stocked",
+                        ["sanitary_pads", "tampons", "menstrual_cups", "pain_relief"], False, now - timedelta(hours=1), 12, True, ["stocked", "stocked", "stocked"], set(), set()),
+            AccessPoint("mum_06", "Dharavi Community Health Centre", "Mumbai", "India",
+                        19.0411, 72.8544, "community_center", "low",
+                        ["sanitary_pads"], True, now - timedelta(hours=18), 2, True, ["low", "empty"], set(), set()),
+
+            # ── DELHI / NEW DELHI (4 locations) ────────────────────────────────────
+            AccessPoint("del_01", "Connaught Place – Public Welfare Dispenser", "New Delhi", "India",
+                        28.6315, 77.2167, "public_restroom", "stocked",
+                        ["sanitary_pads"], True, now - timedelta(hours=2), 4, True, ["stocked", "stocked", "stocked"], set(), set()),
+            AccessPoint("del_02", "Delhi University – North Campus Health Cell", "New Delhi", "India",
+                        28.6862, 77.2082, "university", "stocked",
+                        ["sanitary_pads", "tampons", "pain_relief"], True, now - timedelta(hours=3), 9, True, ["stocked", "stocked", "stocked"], set(), set()),
+            AccessPoint("del_03", "AIIMS Metro Station – Women's Help Desk", "New Delhi", "India",
+                        28.5672, 77.2100, "transit_station", "low",
+                        ["sanitary_pads", "wipes"], True, now - timedelta(hours=12), 2, True, ["low", "stocked"], set(), set()),
+            AccessPoint("del_04", "Lajpat Nagar – Mahila Shakti Kendra", "New Delhi", "India",
+                        28.5700, 77.2373, "community_center", "stocked",
+                        ["sanitary_pads", "tampons", "menstrual_cups", "wipes"], True, now - timedelta(hours=8), 6, True, ["stocked", "stocked", "low"], set(), set()),
+
+            # ── BENGALURU (4 locations) ─────────────────────────────────────────────
+            AccessPoint("blr_01", "Koramangala – Community Health Hub", "Bengaluru", "India",
+                        12.9352, 77.6245, "community_center", "stocked",
+                        ["sanitary_pads", "tampons"], True, now - timedelta(hours=1), 7, True, ["stocked", "stocked", "stocked"], set(), set()),
+            AccessPoint("blr_02", "IISc Campus – Gender Equity Resource Centre", "Bengaluru", "India",
+                        13.0219, 77.5671, "university", "stocked",
+                        ["sanitary_pads", "tampons", "menstrual_cups", "pain_relief"], True, now - timedelta(hours=5), 10, True, ["stocked", "stocked", "stocked"], set(), set()),
+            AccessPoint("blr_03", "Majestic Bus Stand – Public Aid Counter", "Bengaluru", "India",
+                        12.9779, 77.5713, "transit_station", "low",
+                        ["sanitary_pads"], True, now - timedelta(hours=24), 2, True, ["low", "low"], set(), set()),
+            AccessPoint("blr_04", "Jayanagar – BBMP Women's Health Kiosk", "Bengaluru", "India",
+                        12.9308, 77.5838, "community_center", "stocked",
+                        ["sanitary_pads", "tampons", "wipes"], True, now - timedelta(hours=7), 4, True, ["stocked", "low", "stocked"], set(), set()),
         ]
         for ap in demo_points:
             self.access_points[ap.id] = ap
 
-    def get_nearby(self, lat: float, lon: float, radius_km: float = 20.0, 
+
+    def get_nearby(self, lat: float, lon: float, radius_km: float = 20.0,
                    free_only: bool = False, product_filter: Optional[str] = None) -> List[Dict]:
-        results = []
-        for ap in self.access_points.values():
+        """Return locations within radius_km. If none found, expands to all seeded locations
+        (sorted by distance) so users anywhere in India always see the full city map."""
+        def _matches(ap):
             if free_only and not ap.is_free:
-                continue
+                return False
             if product_filter and product_filter not in ap.products:
+                return False
+            return True
+
+        nearby = []
+        all_results = []
+        for ap in self.access_points.values():
+            if not _matches(ap):
                 continue
             dist = haversine_distance(lat, lon, ap.latitude, ap.longitude)
+            d = ap.to_dict(user_lat=lat, user_lon=lon)
+            all_results.append(d)
             if dist <= radius_km:
-                d = ap.to_dict(user_lat=lat, user_lon=lon)
-                results.append(d)
-        
-        results.sort(key=lambda x: x["distance_km"])
-        return results
+                nearby.append(d)
+
+        nearby.sort(key=lambda x: x["distance_km"])
+        if nearby:
+            return nearby
+
+        # Fallback: user is not near any seeded city — return all, sorted by distance
+        all_results.sort(key=lambda x: x["distance_km"])
+        return all_results
+
 
     def submit_checkin(self, device_token: str, location_id: str = "", 
                        status: str = "", products: List[str] = None, note: Optional[str] = None, client_ip: str = "127.0.0.1") -> Dict:

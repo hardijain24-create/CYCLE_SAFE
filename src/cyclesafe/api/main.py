@@ -304,10 +304,11 @@ def evaluate_flags(req: ForecastRequest):
     }
 
 @app.get("/map")
-def get_map_locations(lat: float = 19.0760, lon: float = 72.8777, radius_km: float = 20.0, 
+def get_map_locations(lat: float = 19.0760, lon: float = 72.8777, radius_km: float = 25.0,
                       free_only: bool = False, product: Optional[str] = None):
-    """Get nearby product access points."""
-    return map_engine.get_nearby(lat, lon, radius_km=radius_km, free_only=free_only, product_filter=product)
+    """Get nearby product access points. Falls back to all India locations if none in radius."""
+    locs = map_engine.get_nearby(lat, lon, radius_km=radius_km, free_only=free_only, product_filter=product)
+    return {"locations": locs, "count": len(locs), "radius_km": radius_km}
 
 @app.post("/map/checkin")
 def checkin_map_location(req: MapCheckinRequest, request: Request, device_token: Optional[str] = Header(None, alias="device-token"), device_token_alt: Optional[str] = Header(None, alias="device_token")):

@@ -93,42 +93,42 @@
   </div>
 
   <!-- PERSISTENT TOP NAVIGATION -->
-  <header class="sticky top-0 z-50 bg-csPrimary/95 backdrop-blur-md border-b-2 border-csDark px-4 lg:px-8 py-3.5 flex items-center justify-between">
-    <div class="flex items-center space-x-3 cursor-pointer" onclick="showView('landing')">
-      <img src="assets/logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CycleSafe Logo" class="w-11 h-11 rounded-xl border-2 border-csDark bg-white object-cover sui-shadow-sm">
+  <header class="sticky top-0 z-50 bg-csPrimary/95 backdrop-blur-md border-b-2 border-csDark px-3 lg:px-6 py-2.5 flex items-center justify-between gap-2">
+    <div class="flex items-center space-x-2.5 cursor-pointer shrink-0" onclick="showView('landing')">
+      <img src="assets/logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CycleSafe Logo" class="w-9 h-9 rounded-xl border-2 border-csDark bg-white object-cover sui-shadow-sm">
       <div class="flex flex-col">
-        <span class="font-gasoek text-2xl tracking-tight text-csDark leading-none">CYCLESAFE</span>
-        <span class="font-mono text-[10px] text-csAccent font-bold uppercase tracking-widest">Health History & Patterns</span>
+        <span class="font-gasoek text-xl tracking-tight text-csDark leading-none" id="brand-title">CYCLESAFE</span>
+        <span class="font-mono text-[9px] text-csAccent font-bold uppercase tracking-widest hidden sm:inline" id="brand-sub">Health History & Patterns</span>
       </div>
     </div>
 
     <!-- Nav links (adaptive based on life stage) -->
     <nav class="hidden xl:flex items-center space-x-1 font-mono text-xs font-bold text-csDark" id="main-nav-links">
-      <button id="nav-landing" onclick="showView('landing')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">OVERVIEW</button>
-      <button id="nav-dashboard" onclick="showView('dashboard')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">DASHBOARD</button>
-      <button id="nav-log" onclick="showView('log')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">+ LOG TODAY</button>
-      <button id="nav-calendar" onclick="showView('calendar')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">CALENDAR</button>
-      <button id="nav-patterns" onclick="showView('patterns')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PATTERNS</button>
-      <button id="nav-perimenopause" onclick="showView('perimenopause')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PERIMENOPAUSE</button>
-      <button id="nav-doctor" onclick="showView('doctor')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">DOCTOR REPORT</button>
-      <button id="nav-products" onclick="showView('products')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">FIND PRODUCTS</button>
-      <button id="nav-privacy" onclick="showView('privacy')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PRIVACY</button>
+      <button id="nav-landing" onclick="showView('landing')" class="nav-btn px-2.5 py-1 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">OVERVIEW</button>
+      <button id="nav-dashboard" onclick="showView('dashboard')" class="nav-btn px-2.5 py-1 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">DASHBOARD</button>
+      <button id="nav-log" onclick="showView('log')" class="nav-btn px-2.5 py-1 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">+ LOG TODAY</button>
+      <button id="nav-calendar" onclick="showView('calendar')" class="nav-btn px-2.5 py-1 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">CALENDAR</button>
+      <button id="nav-patterns" onclick="showView('patterns')" class="nav-btn px-2.5 py-1 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PATTERNS</button>
+      <button id="nav-perimenopause" onclick="showView('perimenopause')" class="nav-btn px-2.5 py-1 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PERIMENOPAUSE</button>
+      <button id="nav-doctor" onclick="showView('doctor')" class="nav-btn px-2.5 py-1 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">DOCTOR REPORT</button>
+      <button id="nav-products" onclick="showView('products')" class="nav-btn px-2.5 py-1 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">FIND PRODUCTS</button>
+      <button id="nav-privacy" onclick="showView('privacy')" class="nav-btn px-2.5 py-1 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PRIVACY</button>
     </nav>
 
     <!-- Quick action buttons: SOS, Discreet Mode, Language, Auth/Profile -->
-    <div class="flex items-center space-x-2">
+    <div class="flex items-center space-x-1.5 shrink-0">
       <!-- Emergency SOS Supply Locator Button -->
-      <button onclick="triggerEmergencySOS()" class="hidden md:inline-flex font-mono text-[11px] font-bold px-3 py-1.5 rounded-lg bg-red-500 text-white border-2 border-csDark sui-shadow-sm hover:bg-red-600 transition animate-pulse" title="Locate emergency period supplies near you">
-        🚨 SOS SUPPLIES
+      <button id="nav-sos-btn" onclick="triggerEmergencySOS()" class="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-rose-200 text-rose-900 border-2 border-csDark hover:bg-rose-300 transition flex items-center gap-1" title="Locate emergency period supplies near you">
+        <span>🚨</span><span id="txt-sos">SOS</span>
       </button>
 
       <!-- Discreet Camouflage Safety Shield -->
-      <button id="discreet-toggle-btn" onclick="toggleDiscreetMode()" class="font-mono text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-csWarmBg text-csDark border-2 border-csDark hover:bg-amber-300 transition" title="Toggle discreet study camouflage mode for privacy">
-        🛡️ DISCREET MODE
+      <button id="discreet-toggle-btn" onclick="toggleDiscreetMode()" class="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-200 text-amber-900 border-2 border-csDark hover:bg-amber-300 transition flex items-center gap-1" title="Toggle discreet study camouflage mode for privacy">
+        <span>🛡️</span><span id="txt-discreet">DISCREET</span>
       </button>
 
       <!-- Language Selector -->
-      <select id="lang-selector" onchange="setLanguage(this.value)" class="font-mono text-[11px] font-bold px-2 py-1.5 rounded-lg bg-white text-csDark border-2 border-csDark focus:outline-none cursor-pointer">
+      <select id="lang-selector" onchange="setLanguage(this.value)" class="font-mono text-xs font-bold px-2 py-1 rounded-lg bg-white text-csDark border-2 border-csDark focus:outline-none cursor-pointer hover:bg-csLightBg">
         <option value="en">🌐 EN</option>
         <option value="hi">🇮🇳 HI</option>
         <option value="es">🇪🇸 ES</option>
@@ -136,11 +136,11 @@
         <option value="sw">🌍 SW</option>
       </select>
 
-      <div id="auth-buttons" class="flex items-center space-x-2">
-        <button onclick="showView('auth')" class="hidden sm:inline-flex font-mono text-xs font-bold px-3 py-2 rounded-lg border-2 border-csDark hover:bg-csLightBg transition">SIGN IN</button>
-        <button onclick="showView('signup')" class="font-mono text-xs font-bold px-4 py-2 rounded-lg bg-csAccent text-white border-2 border-csDark sui-shadow-sm hover:opacity-90 transition">SIGN UP</button>
+      <div id="auth-buttons" class="flex items-center space-x-1.5">
+        <button id="btn-signin" onclick="showView('auth')" class="hidden sm:inline-flex font-mono text-xs font-bold px-2.5 py-1 rounded-lg border-2 border-csDark hover:bg-csLightBg transition">SIGN IN</button>
+        <button id="btn-signup" onclick="showView('signup')" class="font-mono text-xs font-bold px-3 py-1 rounded-lg bg-csAccent text-white border-2 border-csDark hover:opacity-90 transition">SIGN UP</button>
       </div>
-      <button id="header-profile-btn" onclick="showView('profile')" class="w-9 h-9 rounded-full bg-csWarmBg border-2 border-csDark flex items-center justify-center font-mono text-xs font-bold text-csDark hover:bg-csPink transition" title="My Profile">?</button>
+      <button id="header-profile-btn" onclick="showView('profile')" class="w-8 h-8 rounded-full bg-csWarmBg border-2 border-csDark flex items-center justify-center font-mono text-xs font-bold text-csDark hover:bg-csPink transition" title="My Profile">?</button>
     </div>
   </header>
 
@@ -2107,36 +2107,134 @@
     let isDiscreetMode = false;
     function toggleDiscreetMode() {
       isDiscreetMode = !isDiscreetMode;
+      const txtDiscreet = document.getElementById('txt-discreet');
       const btn = document.getElementById('discreet-toggle-btn');
-      const logoText = document.querySelector('header .font-gasoek');
-      const logoSub = document.querySelector('header .font-mono.text-\\[10px\\]');
+      const logoText = document.getElementById('brand-title');
+      const logoSub = document.getElementById('brand-sub');
+      
       if (isDiscreetMode) {
-        if (btn) { btn.innerHTML = '🛡️ ACTIVE: CAMPUS MODE'; btn.classList.add('bg-green-400'); }
+        if (txtDiscreet) txtDiscreet.textContent = 'CAMPUS';
+        if (btn) { btn.classList.remove('bg-amber-200', 'text-amber-900'); btn.classList.add('bg-emerald-200', 'text-emerald-900'); }
         if (logoText) logoText.textContent = 'CAMPUS NOTES';
         if (logoSub) logoSub.textContent = 'STUDY ARCHIVE & REVISION PLANNER';
         csToast('🛡️ Discreet Mode Active: Interface disguised under study camouflage.');
       } else {
-        if (btn) { btn.innerHTML = '🛡️ DISCREET MODE'; btn.classList.remove('bg-green-400'); }
+        const lang = localStorage.getItem('cs_lang') || 'en';
+        const curDict = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+        if (txtDiscreet) txtDiscreet.textContent = curDict['txt-discreet'] || 'DISCREET';
+        if (btn) { btn.classList.remove('bg-emerald-200', 'text-emerald-900'); btn.classList.add('bg-amber-200', 'text-amber-900'); }
         if (logoText) logoText.textContent = 'CYCLESAFE';
         if (logoSub) logoSub.textContent = 'Health History & Patterns';
         csToast('CycleSafe brand restored.');
       }
     }
 
+    const TRANSLATIONS = {
+      en: {
+        'nav-landing': 'OVERVIEW',
+        'nav-dashboard': 'DASHBOARD',
+        'nav-log': '+ LOG TODAY',
+        'nav-calendar': 'CALENDAR',
+        'nav-patterns': 'PATTERNS',
+        'nav-perimenopause': 'PERIMENOPAUSE',
+        'nav-doctor': 'DOCTOR REPORT',
+        'nav-products': 'FIND PRODUCTS',
+        'nav-privacy': 'PRIVACY',
+        'txt-discreet': 'DISCREET',
+        'txt-sos': 'SOS',
+        'btn-signin': 'SIGN IN',
+        'btn-signup': 'SIGN UP',
+        'msg-lang': '🌐 Switched to English'
+      },
+      hi: {
+        'nav-landing': 'अवलोकन',
+        'nav-dashboard': 'डैशबोर्ड',
+        'nav-log': '+ दर्ज करें',
+        'nav-calendar': 'कैलेण्डर',
+        'nav-patterns': 'पैटर्न',
+        'nav-perimenopause': 'पेरीमेनोपॉज',
+        'nav-doctor': 'डॉक्टर रिपोर्ट',
+        'nav-products': 'उत्पाद खोजें',
+        'nav-privacy': 'गोपनीयता',
+        'txt-discreet': 'गुप्त मोड',
+        'txt-sos': 'आपतकालीन',
+        'btn-signin': 'साइन इन',
+        'btn-signup': 'साइन अप',
+        'msg-lang': '🇮🇳 हिंदी भाषा चुनी गई'
+      },
+      es: {
+        'nav-landing': 'RESUMEN',
+        'nav-dashboard': 'PANEL',
+        'nav-log': '+ REGISTRAR',
+        'nav-calendar': 'CALENDARIO',
+        'nav-patterns': 'PATRONES',
+        'nav-perimenopause': 'PERIMENOPAUSIA',
+        'nav-doctor': 'INFORME MÉDICO',
+        'nav-products': 'PRODUCTOS',
+        'nav-privacy': 'PRIVACIDAD',
+        'txt-discreet': 'DISCRETO',
+        'txt-sos': 'SOS',
+        'btn-signin': 'ENTRAR',
+        'btn-signup': 'REGISTRO',
+        'msg-lang': '🇪🇸 Idioma cambiado a Español'
+      },
+      fr: {
+        'nav-landing': 'APERÇU',
+        'nav-dashboard': 'TABLEAU',
+        'nav-log': '+ ENREGISTRER',
+        'nav-calendar': 'CALENDRIER',
+        'nav-patterns': 'TENDANCES',
+        'nav-perimenopause': 'PÉRUMÉNOPAUSE',
+        'nav-doctor': 'RAPPORT MÉDICAL',
+        'nav-products': 'PRODUITS',
+        'nav-privacy': 'CONFIDENTIALITÉ',
+        'txt-discreet': 'DISCRET',
+        'txt-sos': 'SOS',
+        'btn-signin': 'CONNEXION',
+        'btn-signup': 'INSCRIPTION',
+        'msg-lang': '🇫🇷 Langue modifiée en Français'
+      },
+      sw: {
+        'nav-landing': 'UJUMLA',
+        'nav-dashboard': 'DASHBODI',
+        'nav-log': '+ ANDIKA LEO',
+        'nav-calendar': 'KALENDA',
+        'nav-patterns': 'MITINDO',
+        'nav-perimenopause': 'PERIMENOPAUSE',
+        'nav-doctor': 'RIPOTI YA DAKTARI',
+        'nav-products': 'TAFUTA BIDHAA',
+        'nav-privacy': 'FARAGHA',
+        'txt-discreet': 'SIRINI',
+        'txt-sos': 'DHARURA',
+        'btn-signin': 'INGIA',
+        'btn-signup': 'JISAJILI',
+        'msg-lang': '🌍 Lugha imebadilishwa kuwa Kiswahili'
+      }
+    };
+
     function setLanguage(lang) {
-      const messages = {
-        en: '🌐 Switched to English',
-        hi: '🇮🇳 हिंदी भाषा चुनी गई (Hindi selected)',
-        es: '🇪🇸 Idioma cambiado a Español',
-        fr: '🇫🇷 Langue modifiée en Français',
-        sw: '🌍 Lugha imebadilishwa kuwa Kiswahili'
-      };
-      csToast(messages[lang] || 'Language updated');
+      const dict = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+      localStorage.setItem('cs_lang', lang);
+
+      for (const [id, text] of Object.entries(dict)) {
+        if (id === 'msg-lang') continue;
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = text;
+        }
+      }
+
+      const sel = document.getElementById('lang-selector');
+      if (sel && sel.value !== lang) sel.value = lang;
+
+      csToast(dict['msg-lang'] || 'Language updated');
     }
 
     window.addEventListener('DOMContentLoaded', () => {
       refreshAuthChrome();
       initCalendar();
+      const savedLang = localStorage.getItem('cs_lang');
+      if (savedLang) setLanguage(savedLang);
       initOnboarding();   // Build 3 cycle cards on page load
       applyStageAdaptiveDashboard();
       renderProfileDetails();

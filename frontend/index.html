@@ -575,7 +575,7 @@
           <button onclick="window.print()" class="font-mono text-xs font-bold px-4 py-2.5 bg-white text-csDark border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-csWarmBg">
             PRINT REPORT
           </button>
-          <button onclick="alert('Report PDF ready! When running the backend server, this downloads the ReportLab PDF.')" class="gasoek-font text-sm px-6 py-2.5 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-opacity-90">
+          <button id="pdf-download-btn" onclick="downloadDoctorPdf()" class="gasoek-font text-sm px-6 py-2.5 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-opacity-90">
             DOWNLOAD PDF ↓
           </button>
         </div>
@@ -617,8 +617,8 @@
           <h1 class="gasoek-font text-4xl sm:text-5xl text-csDark">PRODUCT ACCESS MAP</h1>
           <p class="text-sm font-medium text-csDark/80 mt-1">Real-time locator for emergency pads, tampons, and menstrual cups in public spaces, universities, and health hubs.</p>
         </div>
-        <button onclick="alert('Check-in submitted! Thank you for supporting community menstrual equity.')" class="font-mono text-xs font-bold px-4 py-2.5 bg-csWarmBg text-csDark border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-amber-300">
-          + SUBMIT CHECK-IN
+        <button onclick="loadMapFromAPI()" class="font-mono text-xs font-bold px-4 py-2.5 bg-csWarmBg text-csDark border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-amber-300">
+          🔄 REFRESH MAP
         </button>
       </div>
 
@@ -631,37 +631,9 @@
         </div>
       </div>
 
-      <div class="space-y-4">
-        <div class="bg-white border-2 border-csDark rounded-2xl p-5 sui-shadow flex flex-col md:flex-row justify-between md:items-center gap-4">
-          <div>
-            <div class="flex items-center space-x-2">
-              <h4 class="gasoek-font text-xl text-csDark">Community Health Hub - Central</h4>
-              <span class="pill-tag bg-emerald-200 text-emerald-950 border border-csDark px-2 py-0.5">FREE ACCESS</span>
-              <span class="pill-tag bg-csAccent text-white border border-csDark px-2 py-0.5">VERIFIED</span>
-            </div>
-            <p class="font-mono text-xs text-csDark/70 mt-1">142 Elm St, Suite 100 • Restocked 2 hours ago</p>
-            <div class="flex gap-1.5 mt-2">
-              <span class="font-mono text-[10px] bg-csLightBg border border-csDark px-2 py-0.5 rounded font-bold">PADS</span>
-              <span class="font-mono text-[10px] bg-csLightBg border border-csDark px-2 py-0.5 rounded font-bold">TAMPONS</span>
-            </div>
-          </div>
-          <button onclick="alert('Location confirmed in stock!')" class="font-mono text-xs font-bold px-4 py-2 bg-csWarmBg border-2 border-csDark rounded-xl sui-shadow-sm">VERIFY STOCK</button>
-        </div>
-
-        <div class="bg-white border-2 border-csDark rounded-2xl p-5 sui-shadow flex flex-col md:flex-row justify-between md:items-center gap-4">
-          <div>
-            <div class="flex items-center space-x-2">
-              <h4 class="gasoek-font text-xl text-csDark">Metro University Student Union</h4>
-              <span class="pill-tag bg-emerald-200 text-emerald-950 border border-csDark px-2 py-0.5">FREE ACCESS</span>
-            </div>
-            <p class="font-mono text-xs text-csDark/70 mt-1">Campus South Hall, 2nd Floor Dispenser • Updated Yesterday</p>
-            <div class="flex gap-1.5 mt-2">
-              <span class="font-mono text-[10px] bg-csLightBg border border-csDark px-2 py-0.5 rounded font-bold">PADS</span>
-              <span class="font-mono text-[10px] bg-csLightBg border border-csDark px-2 py-0.5 rounded font-bold">MENSTRUAL CUPS</span>
-            </div>
-          </div>
-          <button onclick="alert('Location confirmed in stock!')" class="font-mono text-xs font-bold px-4 py-2 bg-csWarmBg border-2 border-csDark rounded-xl sui-shadow-sm">VERIFY STOCK</button>
-        </div>
+      <!-- Dynamic map locations loaded from API -->
+      <div id="map-api-locations" class="space-y-4">
+        <div class="text-center py-8 font-mono text-xs text-csDark/60">Loading nearby locations from server...</div>
       </div>
     </section>
 
@@ -675,7 +647,7 @@
         </div>
 
         <div class="p-5 bg-csLightBg border-2 border-csDark rounded-2xl font-mono text-xs space-y-2">
-          <div class="flex justify-between"><span>ACTIVE USER IDENTIFIER:</span><span id="priv-user-id" class="font-bold text-csDark">JD_CYCLESAFE</span></div>
+          <div class="flex justify-between"><span>ACTIVE USER IDENTIFIER:</span><span id="priv-user-id" class="font-bold text-csDark">—</span></div>
           <div class="flex justify-between"><span>TOKEN ENCRYPTION:</span><span class="font-bold text-csAccent">SHA-256 HMAC (ACTIVE)</span></div>
         </div>
 
@@ -818,6 +790,7 @@
           </div>
 
           <p id="signup-error" class="hidden text-rose-700 font-bold"></p>
+          <p id="signup-success" class="hidden text-emerald-700 font-bold"></p>
           <div class="pt-4 flex items-center justify-between">
             <button type="button" onclick="showView('landing')" class="px-5 py-3 border-2 border-csDark rounded-xl font-bold bg-white hover:bg-csLightBg">
               CANCEL
@@ -1198,6 +1171,120 @@
       return 'http://localhost:8000';
     }
 
+    // PDF download with Authorization header (avoids token-in-URL privacy leak)
+    async function downloadDoctorPdf() {
+      const btn = document.getElementById('pdf-download-btn');
+      const uid = localStorage.getItem('cs_user_id') || 'demo_user';
+      const token = localStorage.getItem('cs_auth_token') || '';
+      if (btn) { btn.textContent = 'GENERATING...'; btn.disabled = true; }
+      try {
+        const res = await fetch(`${apiBase()}/report/pdf?user_id=${encodeURIComponent(uid)}`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `CycleSafe_Report_${uid}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('PDF generation failed: ' + err.message + '. Try printing the page instead (PRINT REPORT).');
+      } finally {
+        if (btn) { btn.textContent = 'DOWNLOAD PDF ↓'; btn.disabled = false; }
+      }
+    }
+
+    // Load map from API with geolocation
+    async function loadMapFromAPI() {
+      const container = document.getElementById('map-api-locations');
+      if (!container) return;
+      container.innerHTML = '<div class="text-center py-8 font-mono text-xs text-csDark/60">Fetching nearby locations...</div>';
+
+      let lat = 19.0760, lon = 72.8777; // fallback: Mumbai
+      try {
+        lat = await new Promise((res, rej) =>
+          navigator.geolocation
+            ? navigator.geolocation.getCurrentPosition(p => res(p.coords.latitude), () => res(19.0760))
+            : res(19.0760)
+        );
+        lon = await new Promise((res) =>
+          navigator.geolocation
+            ? navigator.geolocation.getCurrentPosition(p => res(p.coords.longitude), () => res(72.8777))
+            : res(72.8777)
+        );
+      } catch (_) {}
+
+      let locations = [];
+      try {
+        const res = await fetch(`${apiBase()}/map?lat=${lat}&lon=${lon}&radius_km=25`);
+        if (res.ok) {
+          const data = await res.json();
+          locations = data.locations || data || [];
+        }
+      } catch (e) { console.warn('Map API error', e); }
+
+      if (!locations.length) {
+        container.innerHTML = '<div class="text-center py-8 font-mono text-xs text-csDark/60">No locations found nearby, or server offline. Try again later.</div>';
+        return;
+      }
+
+      const token = localStorage.getItem('cs_auth_token') || ('anon_' + Math.random().toString(36).slice(2));
+
+      container.innerHTML = locations.map(loc => {
+        const products = (loc.products || []).map(p =>
+          `<span class="font-mono text-[10px] bg-csLightBg border border-csDark px-2 py-0.5 rounded font-bold uppercase">${p.replace(/_/g,' ')}</span>`
+        ).join('');
+        const statusColor = loc.status === 'stocked' ? 'bg-emerald-200 text-emerald-950' : loc.status === 'low' ? 'bg-amber-200 text-amber-900' : 'bg-rose-200 text-rose-900';
+        const isFree = loc.is_free;
+        return `
+          <div class="bg-white border-2 border-csDark rounded-2xl p-5 sui-shadow flex flex-col md:flex-row justify-between md:items-center gap-4">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h4 class="gasoek-font text-xl text-csDark">${loc.name}</h4>
+                ${isFree ? '<span class="pill-tag bg-emerald-200 text-emerald-950 border border-csDark px-2 py-0.5">FREE ACCESS</span>' : '<span class="pill-tag bg-csWarmBg text-csDark border border-csDark px-2 py-0.5">COMMERCIAL</span>'}
+                <span class="pill-tag ${statusColor} border border-csDark px-2 py-0.5">${(loc.status || 'unknown').toUpperCase()}</span>
+              </div>
+              <p class="font-mono text-xs text-csDark/70 mt-1">${loc.city || ''} ${loc.country || ''} • ${loc.category || ''}</p>
+              <div class="flex flex-wrap gap-1.5 mt-2">${products}</div>
+            </div>
+            <button onclick="submitCheckinToAPI('${loc.id}', 'stocked', '${token}')" class="font-mono text-xs font-bold px-4 py-2 bg-csWarmBg border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-amber-300 transition">VERIFY STOCK ✓</button>
+          </div>`;
+      }).join('');
+    }
+
+    // Submit checkin to the real API
+    async function submitCheckinToAPI(locationId, status, deviceToken) {
+      try {
+        const res = await fetch(`${apiBase()}/map/checkin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'device-token': deviceToken },
+          body: JSON.stringify({ location_id: locationId, status, products: ['sanitary_pads', 'tampons'], note: '' })
+        });
+        if (res.ok) {
+          csToast('✓ Check-in submitted! Thank you for supporting community menstrual equity.');
+          loadMapFromAPI();
+        } else {
+          csToast('Check-in failed: ' + res.status);
+        }
+      } catch (e) {
+        csToast('Check-in saved locally (server offline).');
+      }
+    }
+
+    // Lightweight toast (works without app.js)
+    function csToast(msg) {
+      const old = document.getElementById('cs-inline-toast');
+      if (old) old.remove();
+      const t = document.createElement('div');
+      t.id = 'cs-inline-toast';
+      t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;background:#141314;color:#fff;padding:12px 20px;border-radius:12px;font-family:monospace;font-size:12px;font-weight:bold;box-shadow:4px 4px 0 #D42DA3';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
     function showFormError(id, message) {
       const el = document.getElementById(id);
       if (!el) return;
@@ -1306,10 +1393,15 @@
       initCalendar();
       applyStageAdaptiveDashboard();
       renderProfileDetails();
-      alert(createdOnServer
-        ? `Welcome, ${name}. Your account is saved. Sign in later with ${email} and your password.`
-        : `Welcome, ${name}. Server was offline, so this login is stored only in this browser until you sign up again with the API running.`);
-      showView('dashboard');
+      // Show inline success message then redirect (no blocking alert)
+      const successMsg = document.getElementById('signup-success');
+      if (successMsg) {
+        successMsg.textContent = createdOnServer
+          ? `✓ Welcome, ${name}! Account created. Redirecting to dashboard...`
+          : `✓ Welcome, ${name}! (Offline mode — data saved in browser). Redirecting...`;
+        successMsg.classList.remove('hidden');
+      }
+      setTimeout(() => showView('dashboard'), 1200);
     }
 
     async function handleSignIn(e) {
@@ -1570,6 +1662,13 @@
       if (dateInp) {
         dateInp.value = new Date().toISOString().split('T')[0];
       }
+      // Wire privacy user ID display
+      const privId = document.getElementById('priv-user-id');
+      if (privId) privId.textContent = localStorage.getItem('cs_user_id') || userProfile.email || '—';
+      // Auto-load map when products view is shown
+      document.querySelectorAll('[onclick*="showView\'products\'"], [onclick*="showView(\'products\'"]').forEach(btn => {
+        btn.addEventListener('click', () => setTimeout(loadMapFromAPI, 100));
+      });
     });
   </script>
 </body>

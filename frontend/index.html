@@ -1525,14 +1525,26 @@
               <p class="font-mono text-xs text-csDark/70 mt-1">${loc.city || ''} ${loc.country || ''} • ${loc.category || ''}</p>
               <div class="flex flex-wrap gap-1.5 mt-2">${products}</div>
             </div>
-            <button type="button" onclick="event.preventDefault(); submitCheckinToAPI(event, '${loc.id}', 'stocked', '${token}')" class="font-mono text-xs font-bold px-4 py-2 bg-csWarmBg border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-amber-300 transition">VERIFY STOCK ✓</button>
+            <button type="button" onclick="event.preventDefault(); verifyLocationStock(event, '${loc.id}', '${(loc.name || '').replace(/'/g, "\\'")}', '${token}')" class="font-mono text-xs font-bold px-4 py-2 bg-csWarmBg border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-amber-300 transition">VERIFY STOCK ✓</button>
           </div>`;
       }).join('');
+    }
+
+    // Prompt user to select stock level (STOCKED, LOW, EMPTY) and submit checkin
+    function verifyLocationStock(evt, locId, locName, token) {
+      if (evt) evt.preventDefault();
+      const choice = prompt(`Verify current product stock level for:\n"${locName}"\n\nSelect status:\n1. STOCKED (High Supply ✅)\n2. LOW (Low Supply 🟡)\n3. EMPTY (Out of Stock ❌)\n\nEnter 1, 2, or 3:`, "1");
+      if (!choice) return;
+
+      const statusMap = { "1": "stocked", "2": "low", "3": "empty" };
+      const selectedStatus = statusMap[choice.trim()] || "stocked";
+      submitCheckinToAPI(evt, locId, selectedStatus, token);
     }
 
     // Submit checkin to the real API
     async function submitCheckinToAPI(evt, locationId, status, deviceToken) {
       if (evt) evt.preventDefault();
+      const statusLabels = { stocked: 'STOCKED ✅', low: 'LOW 🟡', empty: 'EMPTY ❌' };
       try {
         const res = await fetch(`${apiBase()}/map/checkin`, {
           method: 'POST',
@@ -1540,13 +1552,13 @@
           body: JSON.stringify({ location_id: locationId, status, products: ['sanitary_pads', 'tampons'], note: '' })
         });
         if (res.ok) {
-          csToast('✓ Check-in submitted! Thank you for supporting community menstrual equity.');
+          csToast(`✓ Stock level verified as ${statusLabels[status] || status.toUpperCase()}! Thank you for supporting community access.`);
           setTimeout(loadMapFromAPI, 300);
         } else {
-          csToast('✓ Stock verified locally! Thank you for supporting community access.');
+          csToast(`✓ Verified as ${statusLabels[status] || status.toUpperCase()}!`);
         }
       } catch (e) {
-        csToast('✓ Stock verified! Thank you for supporting community access.');
+        csToast(`✓ Verified as ${statusLabels[status] || status.toUpperCase()}!`);
       }
     }
 
@@ -2164,7 +2176,6 @@
         'nav-doctor': 'INFORME MÉDICO',
         'nav-products': 'PRODUCTOS',
         'nav-privacy': 'PRIVACIDAD',
-        'txt-discreet': 'DISCRETO',
         'txt-sos': 'SOS',
         'btn-signin': 'ENTRAR',
         'btn-signup': 'REGISTRO',
@@ -2180,7 +2191,6 @@
         'nav-doctor': 'RAPPORT MÉDICAL',
         'nav-products': 'PRODUITS',
         'nav-privacy': 'CONFIDENTIALITÉ',
-        'txt-discreet': 'DISCRET',
         'txt-sos': 'SOS',
         'btn-signin': 'CONNEXION',
         'btn-signup': 'INSCRIPTION',
@@ -2196,7 +2206,6 @@
         'nav-doctor': 'RIPOTI YA DAKTARI',
         'nav-products': 'TAFUTA BIDHAA',
         'nav-privacy': 'FARAGHA',
-        'txt-discreet': 'SIRINI',
         'txt-sos': 'DHARURA',
         'btn-signin': 'INGIA',
         'btn-signup': 'JISAJILI',

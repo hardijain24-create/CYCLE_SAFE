@@ -115,16 +115,11 @@
       <button id="nav-privacy" onclick="showView('privacy')" class="nav-btn px-2.5 py-1 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PRIVACY</button>
     </nav>
 
-    <!-- Quick action buttons: SOS, Discreet Mode, Language, Auth/Profile -->
+    <!-- Quick action buttons: SOS, Language, Auth/Profile -->
     <div class="flex items-center space-x-1.5 shrink-0">
       <!-- Emergency SOS Supply Locator Button -->
       <button id="nav-sos-btn" onclick="triggerEmergencySOS()" class="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-rose-200 text-rose-900 border-2 border-csDark hover:bg-rose-300 transition flex items-center gap-1" title="Locate emergency period supplies near you">
         <span>🚨</span><span id="txt-sos">SOS</span>
-      </button>
-
-      <!-- Discreet Camouflage Safety Shield -->
-      <button id="discreet-toggle-btn" onclick="toggleDiscreetMode()" class="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-200 text-amber-900 border-2 border-csDark hover:bg-amber-300 transition flex items-center gap-1" title="Toggle discreet study camouflage mode for privacy">
-        <span>🛡️</span><span id="txt-discreet">DISCREET</span>
       </button>
 
       <!-- Language Selector -->
@@ -2128,48 +2123,6 @@
       setTimeout(loadMapFromAPI, 100);
     }
 
-    let isDiscreetMode = false;
-    function toggleDiscreetMode() {
-      isDiscreetMode = !isDiscreetMode;
-      const txtDiscreet = document.getElementById('txt-discreet');
-      const btn = document.getElementById('discreet-toggle-btn');
-      const logoText = document.getElementById('brand-title');
-      const logoSub = document.getElementById('brand-sub');
-      const t1 = document.getElementById('ticker-span-1');
-      const t2 = document.getElementById('ticker-span-2');
-      const t3 = document.getElementById('ticker-span-3');
-      const dashTitle = document.getElementById('dash-main-title');
-      const mapTitle = document.getElementById('map-main-title');
-      
-      if (isDiscreetMode) {
-        document.title = 'Campus Notes — Study Archive & Revision Planner';
-        if (txtDiscreet) txtDiscreet.textContent = 'CAMPUS';
-        if (btn) { btn.classList.remove('bg-amber-200', 'text-amber-900'); btn.classList.add('bg-emerald-300', 'text-emerald-950'); }
-        if (logoText) logoText.textContent = 'CAMPUS NOTES';
-        if (logoSub) logoSub.textContent = 'STUDY ARCHIVE & REVISION PLANNER';
-        if (t1) t1.textContent = "● CAMPUS NOTES 2026 · PRIVATE REVISION PLANNER";
-        if (t2) t2.textContent = "▲ MODULES → NOTES → SUMMARY → REVISE";
-        if (t3) t3.textContent = "◆ LOCAL STORAGE ONLY · ENCRYPTED REVISION ARCHIVE";
-        if (dashTitle) dashTitle.textContent = "CAMPUS STUDY & TIMELINE PLANNER.";
-        if (mapTitle) mapTitle.textContent = "CAMPUS STUDY & SUPPLY LOCATOR";
-        csToast('🛡️ Discreet Mode Active: Interface disguised under study camouflage.');
-      } else {
-        document.title = 'CycleSafe — Your Health Has a Story';
-        const lang = localStorage.getItem('cs_lang') || 'en';
-        const curDict = TRANSLATIONS[lang] || TRANSLATIONS['en'];
-        if (txtDiscreet) txtDiscreet.textContent = curDict['txt-discreet'] || 'DISCREET';
-        if (btn) { btn.classList.remove('bg-emerald-300', 'text-emerald-950'); btn.classList.add('bg-amber-200', 'text-amber-900'); }
-        if (logoText) logoText.textContent = 'CYCLESAFE';
-        if (logoSub) logoSub.textContent = 'Health History & Patterns';
-        if (t1) t1.textContent = "● CYCLESAFE 2026 · PRIVACY-FIRST WOMEN'S HEALTH";
-        if (t2) t2.textContent = "▲ TRACK → UNDERSTAND → SUMMARIZE → SHARE";
-        if (t3) t3.textContent = "◆ ZERO THIRD-PARTY TRACKERS · CLIENT-ENCRYPTED HEALTH ARCHIVE";
-        if (dashTitle) dashTitle.textContent = curDict['dash-main-title'] || "YOUR HEALTH, OVER TIME.";
-        if (mapTitle) mapTitle.textContent = curDict['map-main-title'] || "PRODUCT ACCESS MAP";
-        csToast('CycleSafe brand restored.');
-      }
-    }
-
     const TRANSLATIONS = {
       en: {
         'nav-landing': 'OVERVIEW',
@@ -2181,7 +2134,6 @@
         'nav-doctor': 'DOCTOR REPORT',
         'nav-products': 'FIND PRODUCTS',
         'nav-privacy': 'PRIVACY',
-        'txt-discreet': 'DISCREET',
         'txt-sos': 'SOS',
         'btn-signin': 'SIGN IN',
         'btn-signup': 'SIGN UP',
@@ -2197,7 +2149,6 @@
         'nav-doctor': 'डॉक्टर रिपोर्ट',
         'nav-products': 'उत्पाद खोजें',
         'nav-privacy': 'गोपनीयता',
-        'txt-discreet': 'गुप्त मोड',
         'txt-sos': 'आपतकालीन',
         'btn-signin': 'साइन इन',
         'btn-signup': 'साइन अप',

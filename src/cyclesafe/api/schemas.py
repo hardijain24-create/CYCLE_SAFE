@@ -7,6 +7,22 @@ class ConsentRequest(BaseModel):
     user_id: str
     consent_given: bool = True
 
+
+class SignupRequest(BaseModel):
+    email: str
+    password: str = Field(..., min_length=8, max_length=128)
+    name: str = Field(..., min_length=1, max_length=80)
+    age: Optional[int] = Field(None, ge=12, le=100)
+    stage: str = "regular"
+    country: Optional[str] = None
+    state: Optional[str] = None
+    city: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str = Field(..., min_length=1, max_length=128)
+
 class CycleLogInput(BaseModel):
     cycle_length_days: float = Field(..., ge=15, le=90, description="Cycle length in days (15-90)")
     log_date: Optional[str] = Field(None, description="Cycle log date (YYYY-MM-DD)")

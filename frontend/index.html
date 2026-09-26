@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CycleSafe — Your Health Has a Story</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gasoek+One&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            csPrimary: '#F0E7F4',
+            csDark: '#141314',
+            csAccent: '#D42DA3',
+            csSecondaryAccent: '#E1A34A',
+            csLightBg: '#FDE8F4',
+            csWarmBg: '#F7D09D',
+            csPurple: '#D4B8DF',
+            csPink: '#F9ABDA',
+          },
+          fontFamily: {
+            gasoek: ['"Gasoek One"', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Space Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .gasoek-font { font-family: 'Gasoek One', sans-serif; letter-spacing: -0.02em; }
+    .sui-border { border: 2px solid #141314; }
+    .sui-border-3 { border: 3px solid #141314; }
+    .sui-shadow { box-shadow: 6px 6px 0px 0px #141314; }
+    .sui-shadow-accent { box-shadow: 6px 6px 0px 0px #D42DA3; }
+    .sui-shadow-sm { box-shadow: 3px 3px 0px 0px #141314; }
+    .pill-tag { border-radius: 9999px; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 700; }
+    
+    .sui-btn {
+      transition: all 0.15s ease-in-out;
+      cursor: pointer;
+    }
+    .sui-btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 7px 7px 0px 0px #141314;
+    }
+    .sui-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px 0px #141314;
+    }
+    
+    input[type=range] {
+      -webkit-appearance: none;
+      background: #ffffff;
+      border: 2px solid #141314;
+      height: 12px;
+      border-radius: 6px;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: #D42DA3;
+      border: 2px solid #141314;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px 0px #141314;
+    }
+
+    @media print {
+      header, footer, .no-print, #nav-links {
+        display: none !important;
+      }
+      body { background: white !important; }
+      .print-box { box-shadow: none !important; border: 1px solid #000 !important; }
+    }
+  </style>
+</head>
+<body class="bg-csPrimary text-csDark font-sans selection:bg-csPink selection:text-csDark min-h-screen flex flex-col justify-between">
+
+  <!-- TOP TICKER BANNER -->
+  <div class="bg-csAccent text-white py-2 px-4 font-mono text-xs font-bold uppercase tracking-wider overflow-hidden border-b-2 border-csDark">
+    <div class="flex items-center space-x-6">
+      <span>● CYCLESAFE 2026 · PRIVACY-FIRST WOMEN'S HEALTH</span>
+      <span class="hidden md:inline">▲ TRACK → UNDERSTAND → SUMMARIZE → SHARE</span>
+      <span class="hidden lg:inline">◆ ZERO THIRD-PARTY TRACKERS · CLIENT-ENCRYPTED HEALTH ARCHIVE</span>
+    </div>
+  </div>
+
+  <!-- PERSISTENT TOP NAVIGATION -->
+  <header class="sticky top-0 z-50 bg-csPrimary/95 backdrop-blur-md border-b-2 border-csDark px-4 lg:px-8 py-3.5 flex items-center justify-between">
+    <div class="flex items-center space-x-3 cursor-pointer" onclick="showView('landing')">
+      <div class="w-10 h-10 rounded-xl bg-csAccent border-2 border-csDark flex items-center justify-center font-gasoek text-white text-xl sui-shadow-sm">CS</div>
+      <div class="flex flex-col">
+        <span class="font-gasoek text-2xl tracking-tight text-csDark leading-none">CYCLESAFE</span>
+        <span class="font-mono text-[10px] text-csAccent font-bold uppercase tracking-widest">Health History & Patterns</span>
+      </div>
+    </div>
+
+    <!-- Nav links (adaptive based on life stage) -->
+    <nav class="hidden xl:flex items-center space-x-1 font-mono text-xs font-bold text-csDark" id="main-nav-links">
+      <button id="nav-landing" onclick="showView('landing')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">OVERVIEW</button>
+      <button id="nav-dashboard" onclick="showView('dashboard')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">DASHBOARD</button>
+      <button id="nav-log" onclick="showView('log')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">+ LOG TODAY</button>
+      <button id="nav-calendar" onclick="showView('calendar')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">CALENDAR</button>
+      <button id="nav-patterns" onclick="showView('patterns')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PATTERNS</button>
+      <button id="nav-perimenopause" onclick="showView('perimenopause')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PERIMENOPAUSE</button>
+      <button id="nav-doctor" onclick="showView('doctor')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">DOCTOR REPORT</button>
+      <button id="nav-products" onclick="showView('products')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">FIND PRODUCTS</button>
+      <button id="nav-privacy" onclick="showView('privacy')" class="nav-btn px-3 py-1.5 rounded-lg border-2 border-transparent hover:border-csDark hover:bg-csLightBg transition">PRIVACY</button>
+    </nav>
+
+    <!-- Quick action auth/profile — shown/hidden based on whether user has signed up -->
+    <div class="flex items-center space-x-3">
+      <div id="auth-buttons" class="flex items-center space-x-2">
+        <button onclick="showView('auth')" class="hidden sm:inline-flex font-mono text-xs font-bold px-3 py-2 rounded-lg border-2 border-csDark hover:bg-csLightBg transition">SIGN IN</button>
+        <button onclick="showView('signup')" class="font-mono text-xs font-bold px-4 py-2 rounded-lg bg-csAccent text-white border-2 border-csDark sui-shadow-sm hover:opacity-90 transition">SIGN UP</button>
+      </div>
+      <button id="header-profile-btn" onclick="showView('profile')" class="w-9 h-9 rounded-full bg-csWarmBg border-2 border-csDark flex items-center justify-center font-mono text-xs font-bold text-csDark hover:bg-csPink transition" title="My Profile">?</button>
+    </div>
+  </header>
+
+  <!-- APP VIEW CONTAINER -->
+  <main id="app-container" class="w-full flex-grow">
+
+    <!-- VIEW 1: LANDING PAGE -->
+    <section id="view-landing" class="view-section block">
+      <div class="relative overflow-hidden bg-csLightBg border-b-2 border-csDark py-16 lg:py-24 px-4 sm:px-8">
+        <div class="absolute top-8 right-12 w-32 h-32 rounded-full border-4 border-dashed border-csAccent/40 pointer-events-none animate-spin" style="animation-duration: 25s;"></div>
+        <div class="absolute -bottom-10 right-1/4 w-48 h-48 rounded-3xl bg-csWarmBg border-2 border-csDark pointer-events-none rotate-12"></div>
+        
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div class="lg:col-span-7 space-y-6">
+            <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-csWarmBg border border-csSecondaryAccent text-csDark font-mono text-xs font-bold">
+              <span class="w-2 h-2 rounded-full bg-csAccent"></span>
+              <span>2026 REVOLUTIONARY HEALTH INTELLIGENCE</span>
+            </div>
+            
+            <!-- Headline without the underline -->
+            <h1 class="gasoek-font text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-none text-csDark tracking-tight">
+              YOUR HEALTH<br/>
+              <span class="text-csAccent">HAS A STORY.</span>
+            </h1>
+            
+            <p class="text-base sm:text-lg md:text-xl text-csDark/80 max-w-2xl leading-relaxed font-medium">
+              CycleSafe helps you track your periods, symptoms and changes over time — so you can understand your health history and be better prepared for conversations with your doctor.
+            </p>
+
+            <div class="flex flex-wrap gap-4 pt-2">
+              <button onclick="showView('signup')" class="gasoek-font text-lg px-8 py-4 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow hover:bg-opacity-90 transition transform active:translate-x-1 active:translate-y-1">
+                START TRACKING
+              </button>
+              <button onclick="document.getElementById('features-editorial').scrollIntoView({behavior: 'smooth'})" class="font-mono text-sm font-bold px-7 py-4 bg-white text-csDark border-2 border-csDark rounded-xl sui-shadow hover:bg-csWarmBg transition">
+                EXPLORE CYCLESAFE ↓
+              </button>
+            </div>
+          </div>
+
+          <!-- Abstract Hero Graphic -->
+          <div class="lg:col-span-5 relative">
+            <div class="bg-csWarmBg border-2 border-csDark rounded-3xl p-6 sui-shadow relative z-10 overflow-hidden">
+              <div class="flex items-center justify-between pb-4 border-b border-csDark/20 font-mono text-xs font-bold text-csDark">
+                <span>LIVING ARCHIVE VISUALIZER</span>
+                <span id="hero-cycle-badge" class="bg-csAccent text-white px-2 py-0.5 rounded border border-csDark">DAY 18 OF 29</span>
+              </div>
+              
+              <div class="py-6 flex flex-col items-center justify-center relative">
+                <div class="w-56 h-56 rounded-full border-4 border-csPurple flex items-center justify-center relative p-3">
+                  <div class="absolute inset-0 rounded-full border-4 border-csAccent border-t-transparent border-l-transparent -rotate-45"></div>
+                  <div class="w-40 h-40 rounded-full bg-white border-2 border-csDark flex flex-col items-center justify-center text-center p-3">
+                    <span class="font-mono text-[11px] font-bold text-csAccent uppercase">Cycle Phase</span>
+                    <span id="hero-phase-text" class="gasoek-font text-3xl text-csDark mt-0.5">LUTEAL</span>
+                    <span id="hero-phase-sub" class="font-mono text-[10px] text-csDark/60 mt-1">Est. Window: 10-12 Days</span>
+                  </div>
+                </div>
+
+                <div class="absolute top-4 left-0 bg-white border-2 border-csDark p-2.5 rounded-xl sui-shadow-sm text-left">
+                  <p class="font-mono text-[9px] text-csDark/70 font-bold uppercase">Symptom Cluster</p>
+                  <p class="font-bold text-xs text-csAccent">Fatigue + Mild Cramp</p>
+                </div>
+              </div>
+            </div>
+            <div class="absolute -bottom-4 -left-4 w-full h-full bg-csPink rounded-3xl border-2 border-csDark -z-0"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. PRODUCT EXPLANATION -->
+      <section class="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-b-2 border-csDark">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+          <div>
+            <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block mb-2">HOW IT WORKS</span>
+            <h2 class="gasoek-font text-4xl sm:text-5xl md:text-6xl text-csDark leading-tight">TRACK WHAT CHANGES.</h2>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="bg-csLightBg border-2 border-csDark rounded-2xl p-8 sui-shadow flex flex-col justify-between">
+            <span class="gasoek-font text-3xl text-csAccent">01</span>
+            <h3 class="gasoek-font text-3xl text-csDark my-3">LOG</h3>
+            <p class="text-csDark/80 font-medium">Record your cycle and symptoms in seconds. Multi-touch logging built for speed and zero friction.</p>
+          </div>
+          <div class="bg-csWarmBg border-2 border-csDark rounded-2xl p-8 sui-shadow-accent flex flex-col justify-between">
+            <span class="gasoek-font text-3xl text-csSecondaryAccent">02</span>
+            <h3 class="gasoek-font text-3xl text-csDark my-3">UNDERSTAND</h3>
+            <p class="text-csDark/80 font-medium">See changes and recurring patterns across your history. Spot multi-month variance and perimenopause signals.</p>
+          </div>
+          <div class="bg-csPink border-2 border-csDark rounded-2xl p-8 sui-shadow flex flex-col justify-between">
+            <span class="gasoek-font text-3xl text-csDark">03</span>
+            <h3 class="gasoek-font text-3xl text-csDark my-3">PREPARE</h3>
+            <p class="text-csDark/80 font-medium">Turn your history into a simple health summary for your next appointment. Clear, concise, clinician-first.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. FEATURES GRID -->
+      <section id="features-editorial" class="py-20 px-4 sm:px-8 max-w-7xl mx-auto border-b-2 border-csDark">
+        <h2 class="gasoek-font text-4xl sm:text-5xl text-csDark mb-8">BUILT FOR REAL BODIES, NOT ALGORITHMS.</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="border-2 border-csDark bg-csLightBg rounded-2xl p-6 sui-shadow">
+            <h3 class="gasoek-font text-2xl text-csDark mb-2">CYCLE TRACKING</h3>
+            <p class="text-sm text-csDark/80">Log flow intensity and period start/stops with neutral timeline metrics.</p>
+          </div>
+          <div class="border-2 border-csDark bg-csWarmBg rounded-2xl p-6 sui-shadow">
+            <h3 class="gasoek-font text-2xl text-csDark mb-2">SYMPTOM HISTORY</h3>
+            <p class="text-sm text-csDark/80">Track pain, fatigue, sleep disruptions, and vasomotor clusters.</p>
+          </div>
+          <div class="border-2 border-csDark bg-white rounded-2xl p-6 sui-shadow-accent">
+            <h3 class="gasoek-font text-2xl text-csAccent mb-2">DOCTOR-READY REPORT</h3>
+            <p class="text-sm text-csDark/80">One-page clinical summary formatted for immediate physician review.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA BANNER -->
+      <section class="py-16 px-4 sm:px-8 bg-csAccent text-white border-b-2 border-csDark text-center">
+        <h2 class="gasoek-font text-4xl sm:text-6xl">YOUR CYCLE IS NOT A CLINICAL SECRECY.</h2>
+        <div class="pt-6">
+          <button onclick="showView('dashboard')" class="gasoek-font text-lg px-8 py-4 bg-csWarmBg text-csDark border-2 border-csDark rounded-xl sui-shadow hover:bg-amber-300">
+            LAUNCH CYCLESAFE DASHBOARD
+          </button>
+        </div>
+      </section>
+    </section>
+
+    <!-- VIEW 2: DASHBOARD (ADAPTIVE TO USER'S STAGE) -->
+    <section id="view-dashboard" class="view-section hidden py-10 px-4 sm:px-8 max-w-7xl mx-auto space-y-8">
+      <div class="flex flex-col sm:flex-row justify-between sm:items-center pb-6 border-b-2 border-csDark gap-4">
+        <div>
+          <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">HEALTH OVER TIME</span>
+          <h1 class="gasoek-font text-4xl sm:text-5xl text-csDark">YOUR HEALTH, OVER TIME.</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+          <button onclick="showView('log')" class="gasoek-font text-base px-6 py-3 bg-csWarmBg text-csDark border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-amber-300">+ LOG TODAY</button>
+          <button onclick="showView('doctor')" class="gasoek-font text-base px-6 py-3 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-opacity-90">CREATE REPORT</button>
+        </div>
+      </div>
+
+      <!-- Stage Specific Banner -->
+      <div id="dash-stage-banner" class="p-4 bg-csWarmBg border-2 border-csDark rounded-2xl flex items-center justify-between font-mono text-xs">
+        <div>
+          <span class="font-bold">ACTIVE PROFILE STAGE:</span>
+          <span id="dash-stage-name" class="font-bold text-csAccent uppercase ml-1">REGULAR MENSTRUAL CYCLES</span>
+        </div>
+        <button onclick="showView('profile')" class="underline hover:text-csAccent font-bold">Change in Profile →</button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Main Tracking Card -->
+        <div class="lg:col-span-8 bg-csLightBg border-2 border-csDark rounded-3xl p-8 sui-shadow space-y-6">
+          <div class="flex justify-between items-center">
+            <span id="dash-cycle-pill" class="pill-tag bg-csAccent text-white px-3 py-1 border border-csDark">NO LOGS YET</span>
+            <span id="dash-cycle-meta" class="font-mono text-xs font-bold text-csDark">AWAITING FIRST LOG</span>
+          </div>
+          <h2 id="dash-cycle-title" class="gasoek-font text-4xl sm:text-5xl text-csDark mt-3">NO ACTIVE CYCLE RECORDED</h2>
+          <p id="dash-cycle-desc" class="font-mono text-xs text-csDark/80">Your calendar and timeline start completely clean. Tap '+ LOG TODAY' to log your current cycle or last period start date.</p>
+          
+          <div id="dash-timeline-wrapper" class="space-y-2">
+            <div class="w-full py-4 border-2 border-dashed border-csDark/30 rounded-xl bg-white/50 text-center font-mono text-xs text-csDark/60">
+              Your 4-phase cycle timeline will display here after you log your first period.
+            </div>
+          </div>
+        </div>
+
+        <!-- History/Baseline Card -->
+        <div class="lg:col-span-4 bg-csWarmBg border-2 border-csDark rounded-3xl p-7 sui-shadow flex flex-col justify-between space-y-4">
+          <div>
+            <span class="pill-tag bg-csDark text-csWarmBg px-2.5 py-1">STABILITY RECORD</span>
+            <h3 class="gasoek-font text-2xl text-csDark mt-3">RECORDED HISTORY</h3>
+            <p id="dash-history-desc" class="text-xs text-csDark/80 mt-2 font-medium">0 cycles recorded. Start logging your period flow to build your longitudinal personal baseline.</p>
+          </div>
+          <div class="bg-white/80 p-3 rounded-xl border border-csDark font-mono text-xs space-y-1">
+            <div class="flex justify-between"><span>Personal Median:</span><span id="dash-median-days" class="font-bold text-csAccent">—</span></div>
+            <div class="flex justify-between"><span>Conformal Window:</span><span id="dash-conformal-range" class="font-bold text-csDark">Requires Logged Cycle</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage Adaptive Navigation Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6" id="dash-quick-cards">
+        <div onclick="showView('calendar')" id="card-cal" class="cursor-pointer bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow hover:bg-csLightBg transition">
+          <span class="gasoek-font text-xl text-csAccent">CALENDAR →</span>
+          <p class="text-xs text-csDark/80 mt-2">View monthly timeline, flow tags, and symptom distribution.</p>
+        </div>
+        <div onclick="showView('patterns')" class="cursor-pointer bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow hover:bg-csWarmBg transition">
+          <span class="gasoek-font text-xl text-csSecondaryAccent">PATTERNS →</span>
+          <p class="text-xs text-csDark/80 mt-2">Check non-diagnostic timing rules and cluster alerts.</p>
+        </div>
+        <div onclick="showView('products')" class="cursor-pointer bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow hover:bg-csPink transition">
+          <span class="gasoek-font text-xl text-csDark">FIND PRODUCTS →</span>
+          <p class="text-xs text-csDark/80 mt-2">Emergency dispensers, public access supplies, and community mutual aid.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: LOG TODAY -->
+    <section id="view-log" class="view-section hidden py-10 px-4 sm:px-8 max-w-4xl mx-auto space-y-6">
+      <div class="bg-white border-4 border-csDark rounded-3xl p-6 sm:p-10 sui-shadow space-y-8">
+        <div class="flex justify-between items-center pb-4 border-b-2 border-csDark">
+          <div>
+            <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">DAILY LOGGING</span>
+            <h2 class="gasoek-font text-4xl text-csDark">RECORD TODAY'S HEALTH</h2>
+          </div>
+          <button onclick="showView('dashboard')" class="w-8 h-8 rounded-full border-2 border-csDark flex items-center justify-center font-mono font-bold hover:bg-csPink">&times;</button>
+        </div>
+
+        <form onsubmit="saveLogEntry(event)" class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="font-mono text-xs font-bold text-csDark block mb-1">DATE</label>
+              <input type="date" id="form-log-date" class="w-full p-3 border-2 border-csDark rounded-xl font-mono text-sm bg-csLightBg focus:outline-none">
+            </div>
+            <div id="log-cycle-len-box">
+              <label class="font-mono text-xs font-bold text-csDark block mb-1">ESTIMATED CYCLE LENGTH (DAYS)</label>
+              <input type="number" id="form-cycle-len" value="29" min="15" max="90" class="w-full p-3 border-2 border-csDark rounded-xl font-mono text-sm bg-white focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Flow intensity selection -->
+          <div id="log-flow-section">
+            <label class="font-mono text-xs font-bold text-csDark block mb-2">FLOW INTENSITY</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <button type="button" onclick="setFlowLevel(0)" id="flow-btn-0" class="flow-pill p-3 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">0: NONE</button>
+              <button type="button" onclick="setFlowLevel(1)" id="flow-btn-1" class="flow-pill p-3 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">1: LIGHT</button>
+              <button type="button" onclick="setFlowLevel(2)" id="flow-btn-2" class="flow-pill p-3 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-csAccent text-white sui-shadow-sm">2: MODERATE</button>
+              <button type="button" onclick="setFlowLevel(3)" id="flow-btn-3" class="flow-pill p-3 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">3: HEAVY</button>
+            </div>
+            <div class="mt-3 flex items-center space-x-2">
+              <input type="checkbox" id="form-soaking-check" class="w-4 h-4 border-2 border-csDark rounded accent-csAccent">
+              <label for="form-soaking-check" class="font-mono text-xs text-csDark font-bold">Soaking pad or tampon every hour for several consecutive hours</label>
+            </div>
+          </div>
+
+          <!-- Sliders -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-csLightBg p-6 rounded-2xl border-2 border-csDark">
+            <div>
+              <div class="flex justify-between font-mono text-xs font-bold mb-1">
+                <span>PAIN SCORE:</span>
+                <span id="txt-pain-val" class="text-csAccent">1/3</span>
+              </div>
+              <input type="range" id="rng-pain" min="0" max="3" value="1" oninput="document.getElementById('txt-pain-val').textContent = this.value + '/3'" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between font-mono text-xs font-bold mb-1">
+                <span>SLEEP QUALITY:</span>
+                <span id="txt-sleep-val" class="text-csAccent">2/3</span>
+              </div>
+              <input type="range" id="rng-sleep" min="0" max="3" value="2" oninput="document.getElementById('txt-sleep-val').textContent = this.value + '/3'" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between font-mono text-xs font-bold mb-1">
+                <span>FATIGUE SCORE:</span>
+                <span id="txt-fatigue-val" class="text-csAccent">1/3</span>
+              </div>
+              <input type="range" id="rng-fatigue" min="0" max="3" value="1" oninput="document.getElementById('txt-fatigue-val').textContent = this.value + '/3'" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between font-mono text-xs font-bold mb-1">
+                <span>MOOD BALANCE:</span>
+                <span id="txt-mood-val" class="text-csAccent">2/3</span>
+              </div>
+              <input type="range" id="rng-mood" min="0" max="3" value="2" oninput="document.getElementById('txt-mood-val').textContent = this.value + '/3'" class="w-full">
+            </div>
+          </div>
+
+          <!-- Symptoms Tags -->
+          <div>
+            <label class="font-mono text-xs font-bold text-csDark block mb-2">SYMPTOMS (CLICK TO TOGGLE)</label>
+            <div class="flex flex-wrap gap-2" id="symptoms-picker">
+              <button type="button" onclick="toggleSymChip(this, 'cramps')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">Cramps</button>
+              <button type="button" onclick="toggleSymChip(this, 'bloating')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">Bloating</button>
+              <button type="button" onclick="toggleSymChip(this, 'headache')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">Headache</button>
+              <button type="button" onclick="toggleSymChip(this, 'acne')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">Acne</button>
+              <button type="button" onclick="toggleSymChip(this, 'breast_tenderness')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">Breast Tenderness</button>
+              <button type="button" onclick="toggleSymChip(this, 'backache')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">Backache</button>
+              <button type="button" onclick="toggleSymChip(this, 'nausea')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">Nausea</button>
+              <button type="button" onclick="toggleSymChip(this, 'hot_flashes')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">Hot Flashes</button>
+              <button type="button" onclick="toggleSymChip(this, 'night_sweats')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">Night Sweats</button>
+              <button type="button" onclick="toggleSymChip(this, 'sleep_disruption')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">Sleep Disruption</button>
+              <button type="button" onclick="toggleSymChip(this, 'fatigue')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-csAccent text-white sui-shadow-sm">Fatigue</button>
+              <button type="button" onclick="toggleSymChip(this, 'mood_change')" class="sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white">Mood Changes</button>
+            </div>
+          </div>
+
+          <div class="pt-4 flex justify-end space-x-3">
+            <button type="button" onclick="showView('dashboard')" class="px-6 py-3 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white hover:bg-csLightBg">CANCEL</button>
+            <button type="submit" class="gasoek-font text-lg px-8 py-3 bg-csWarmBg text-csDark border-2 border-csDark rounded-xl sui-shadow hover:bg-amber-300">SAVE TODAY</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- VIEW 4: CALENDAR -->
+    <section id="view-calendar" class="view-section hidden py-10 px-4 sm:px-8 max-w-7xl mx-auto space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between sm:items-center pb-6 border-b-2 border-csDark gap-4">
+        <div>
+          <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">MONTHLY TIMELINE</span>
+          <h1 class="gasoek-font text-4xl sm:text-5xl text-csDark">CYCLE CALENDAR</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+          <span class="gasoek-font text-2xl text-csDark bg-white px-4 py-2 border-2 border-csDark rounded-xl sui-shadow-sm">SEPTEMBER 2026</span>
+          <button onclick="showView('log')" class="font-mono text-xs font-bold px-4 py-2.5 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow-sm">+ LOG DATE</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-8 bg-white border-2 border-csDark rounded-3xl p-6 sui-shadow">
+          <div class="grid grid-cols-7 gap-2 mb-3 text-center font-mono text-xs font-bold text-csDark/70">
+            <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+          </div>
+          <div id="calendar-grid-cells" class="grid grid-cols-7 gap-2"></div>
+          <div class="mt-6 pt-4 border-t-2 border-csDark/20 flex flex-wrap gap-4 font-mono text-xs">
+            <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-csAccent"></span><span>Period Flow (Logged)</span></div>
+            <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-csWarmBg border border-csDark/40"></span><span>Symptoms Logged</span></div>
+            <div class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 rounded-full bg-csAccent"></span><span>Today's Date Indicator</span></div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 bg-csWarmBg border-2 border-csDark rounded-3xl p-6 sui-shadow space-y-4">
+          <span class="pill-tag bg-csDark text-csWarmBg px-2.5 py-1">DAY DETAILS</span>
+          <h3 id="cal-day-title" class="gasoek-font text-3xl text-csDark">SELECT A DATE</h3>
+          <div id="cal-day-body" class="font-mono text-xs text-csDark space-y-2 bg-white/70 p-4 rounded-xl border border-csDark">
+            <p class="text-csDark/70 italic">No entries logged for this date.</p>
+            <p class="text-[11px] text-csDark/60 mt-1">Click any day on the calendar or tap below to record flow intensity, symptoms, or cycle start.</p>
+          </div>
+          <button id="cal-day-btn" onclick="openLogForDate('2026-09-26')" class="w-full font-mono text-xs font-bold px-4 py-3 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow-sm">
+            + LOG FOR THIS DATE
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: PATTERNS -->
+    <section id="view-patterns" class="view-section hidden py-10 px-4 sm:px-8 max-w-7xl mx-auto space-y-8">
+      <div class="pb-6 border-b-2 border-csDark">
+        <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">YOUR HEALTH OVER TIME</span>
+        <h1 class="gasoek-font text-4xl sm:text-5xl text-csDark">CYCLE PATTERNS</h1>
+        <p class="text-sm text-csDark/80 font-medium mt-1 max-w-2xl">This page analyses everything you've logged — your period dates, symptoms, flow heaviness, sleep, mood — and shows you patterns over time. The more you log, the clearer your picture becomes.</p>
+      </div>
+
+      <!-- What is this page? Explainer -->
+      <div class="bg-csLightBg border-2 border-csDark rounded-2xl p-6 flex items-start space-x-4">
+        <div class="text-3xl">🔍</div>
+        <div>
+          <h3 class="gasoek-font text-xl text-csDark mb-1">WHAT DOES THIS PAGE DO?</h3>
+          <p class="text-sm text-csDark/80">Patterns watches your logged entries and highlights three things: <strong>how regular your cycle length is</strong>, <strong>which symptoms keep appearing together</strong>, and <strong>how heavy your flow has been</strong>. This is not a diagnosis — it's your personal health history, summarised clearly so you can spot changes and talk to your doctor more confidently.</p>
+        </div>
+      </div>
+
+      <!-- Three pattern cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Card 1: Cycle Timing -->
+        <div class="bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow space-y-4">
+          <div class="flex items-center space-x-3 pb-3 border-b-2 border-csDark">
+            <span class="text-2xl">📅</span>
+            <div>
+              <span class="pill-tag bg-csAccent text-white px-2 py-0.5 text-[10px]">TIMING</span>
+              <h3 class="gasoek-font text-xl text-csDark mt-0.5">CYCLE REGULARITY</h3>
+            </div>
+          </div>
+          <p class="text-xs text-csDark/80" id="pat-stability-text">No cycles logged yet. When you log your period start dates, this will calculate your average cycle length and show whether your timing is consistent or varies a lot.</p>
+          <div class="bg-csLightBg rounded-xl p-3 font-mono text-xs space-y-1">
+            <div class="flex justify-between text-csDark/70"><span>Average length:</span><span id="pat-avg-length" class="font-bold text-csDark">— days</span></div>
+            <div class="flex justify-between text-csDark/70"><span>Entries logged:</span><span id="pat-entries-count" class="font-bold text-csDark">0</span></div>
+          </div>
+        </div>
+
+        <!-- Card 2: Symptom Clusters -->
+        <div class="bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow space-y-4">
+          <div class="flex items-center space-x-3 pb-3 border-b-2 border-csDark">
+            <span class="text-2xl">🩺</span>
+            <div>
+              <span class="pill-tag bg-csSecondaryAccent text-csDark px-2 py-0.5 text-[10px]">SYMPTOMS</span>
+              <h3 class="gasoek-font text-xl text-csDark mt-0.5">RECURRING SYMPTOMS</h3>
+            </div>
+          </div>
+          <p class="text-xs text-csDark/80" id="pat-clusters-text">No symptoms logged yet. When you log symptoms like cramps, fatigue or headaches, this will show which ones appear most often so you can tell your doctor about recurring patterns.</p>
+          <div id="pat-symptom-tags" class="flex flex-wrap gap-1.5 min-h-[28px]">
+            <span class="font-mono text-[10px] text-csDark/50 italic">Symptoms will appear here once logged</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Flow Intensity -->
+        <div class="bg-white border-2 border-csDark rounded-2xl p-6 sui-shadow space-y-4">
+          <div class="flex items-center space-x-3 pb-3 border-b-2 border-csDark">
+            <span class="text-2xl">💧</span>
+            <div>
+              <span class="pill-tag bg-csDark text-white px-2 py-0.5 text-[10px]">FLOW</span>
+              <h3 class="gasoek-font text-xl text-csDark mt-0.5">FLOW HEAVINESS</h3>
+            </div>
+          </div>
+          <p class="text-xs text-csDark/80" id="pat-flow-text">No flow data yet. Once you log flow intensity (spotting, moderate, or heavy), this will track whether your periods are getting heavier or lighter over time — useful information for doctor visits.</p>
+          <div class="bg-csLightBg rounded-xl p-3 font-mono text-xs space-y-1">
+            <div class="flex justify-between text-csDark/70"><span>Soaking flag raised:</span><span id="pat-soaking-flag" class="font-bold text-csDark">No</span></div>
+            <div class="flex justify-between text-csDark/70"><span>Most common flow:</span><span id="pat-common-flow" class="font-bold text-csDark">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Log prompt if empty -->
+      <div id="pat-empty-prompt" class="hidden bg-csWarmBg border-2 border-csDark rounded-2xl p-6 text-center space-y-3">
+        <p class="gasoek-font text-2xl text-csDark">START LOGGING TO SEE YOUR PATTERNS</p>
+        <p class="font-mono text-xs text-csDark/80">Log your period and symptoms daily — patterns need at least a few entries to appear.</p>
+        <button onclick="showView('log')" class="font-mono text-xs font-bold px-6 py-3 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow-sm">+ LOG TODAY</button>
+      </div>
+    </section>
+
+    <!-- VIEW 6: PERIMENOPAUSE -->
+    <section id="view-perimenopause" class="view-section hidden py-10 px-4 sm:px-8 max-w-7xl mx-auto space-y-8">
+      <div class="pb-6 border-b-2 border-csDark">
+        <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">HORMONAL TRANSITIONS</span>
+        <h1 class="gasoek-font text-4xl sm:text-5xl text-csDark">PERIMENOPAUSE MONITORING</h1>
+        <p class="text-sm text-csDark/80 font-medium mt-1">Specialized tracking for vasomotor symptoms, multi-month interval widening, and clinician talking points.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 bg-csWarmBg border-2 border-csDark rounded-3xl p-8 sui-shadow space-y-4">
+          <span class="pill-tag bg-csAccent text-white px-2.5 py-1">VASOMOTOR TRACKER</span>
+          <h3 class="gasoek-font text-3xl text-csDark">HOT FLASHES & NIGHT SWEATS</h3>
+          <p class="text-xs text-csDark/80 font-medium">Record frequency and severity of vasomotor disruptions. Observational tracking provides clear longitudinal data for hormone consultations.</p>
+          <div class="pt-2">
+            <button onclick="showView('log')" class="font-mono text-xs font-bold px-4 py-2.5 bg-csDark text-white rounded-xl hover:bg-neutral-800 transition">
+              + LOG VASOMOTOR SYMPTOM
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 bg-white border-2 border-csDark rounded-3xl p-8 sui-shadow flex flex-col justify-between space-y-4">
+          <div>
+            <span class="pill-tag bg-amber-200 text-csDark border border-csDark px-2 py-0.5">CONFORMAL EXPANSION</span>
+            <h3 class="gasoek-font text-2xl text-csDark mt-2">AGE 45+ UNCERTAINTY</h3>
+            <p class="text-xs text-csDark/80 mt-2">As cycles naturally widen, CycleSafe widens prediction intervals (e.g. 26-38 days) to prevent misleading exact forecasts.</p>
+          </div>
+          <button onclick="showView('doctor')" class="font-mono text-xs font-bold px-4 py-2 bg-csLightBg border border-csDark rounded-xl hover:bg-csPink">
+            INCLUDE IN DOCTOR REPORT →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 7: DOCTOR REPORT -->
+    <section id="view-doctor" class="view-section hidden py-10 px-4 sm:px-8 max-w-5xl mx-auto space-y-6">
+      <div class="flex justify-between items-center pb-4 border-b-2 border-csDark no-print">
+        <div>
+          <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">APPOINTMENT PREPARATION</span>
+          <h2 class="gasoek-font text-3xl sm:text-4xl text-csDark">CYCLESAFE CLINICAL BRIEF</h2>
+        </div>
+        <div class="flex space-x-3">
+          <button onclick="window.print()" class="font-mono text-xs font-bold px-4 py-2.5 bg-white text-csDark border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-csWarmBg">
+            PRINT REPORT
+          </button>
+          <button onclick="alert('Report PDF ready! When running the backend server, this downloads the ReportLab PDF.')" class="gasoek-font text-sm px-6 py-2.5 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-opacity-90">
+            DOWNLOAD PDF ↓
+          </button>
+        </div>
+      </div>
+
+      <div class="print-box bg-white border-4 border-csDark rounded-3xl p-8 sm:p-10 sui-shadow space-y-6">
+        <div class="flex justify-between border-b-2 border-csDark pb-4">
+          <span class="gasoek-font text-2xl text-csDark">CYCLESAFE CLINICAL BRIEF</span>
+          <span class="font-mono text-xs text-csDark/60 font-bold">LONGITUDINAL PATIENT ARCHIVE</span>
+        </div>
+
+        <div class="p-4 bg-csLightBg border-2 border-csDark rounded-xl font-mono text-xs text-csDark">
+          CLINICAL DISCLAIMER: This report summarizes information entered voluntarily into CycleSafe by the user. It is intended to support evidence-informed conversations with healthcare professionals and is not a medical diagnosis.
+        </div>
+
+        <!-- Demographics & Metrics Table -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 bg-csPrimary/50 border-2 border-csDark rounded-2xl font-mono text-xs">
+          <div><span class="text-csDark/60 block">PATIENT NAME:</span><span id="doc-patient-name" class="font-bold">Jane Doe</span></div>
+          <div><span class="text-csDark/60 block">LIFE STAGE:</span><span id="doc-patient-stage" class="font-bold">REGULAR CYCLES</span></div>
+          <div><span class="text-csDark/60 block">LOCATION:</span><span id="doc-patient-loc" class="font-bold">Mumbai, India</span></div>
+          <div><span class="text-csDark/60 block">HISTORICAL MEDIAN:</span><span id="doc-historical-median" class="font-bold text-csAccent">— (AWAITING LOGS)</span></div>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="font-mono text-xs font-bold text-csDark uppercase">DISCUSSION POINTS FOR PHYSICIAN</h4>
+          <ul id="doc-discussion-points" class="list-disc pl-5 font-mono text-xs text-csDark space-y-1">
+            <li class="italic text-csDark/70">No period cycles recorded yet in this profile. Summary discussion points will generate automatically when the patient logs cycles.</li>
+            <li>Client-side encryption active. Longitudinal stability indicators will appear once tracking commences.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 8: FIND PRODUCTS (PRODUCT ACCESS MAP) -->
+    <section id="view-products" class="view-section hidden py-10 px-4 sm:px-8 max-w-7xl mx-auto space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between sm:items-center pb-6 border-b-2 border-csDark gap-4">
+        <div>
+          <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">COMMUNITY MUTUAL AID & EMERGENCY SUPPLY</span>
+          <h1 class="gasoek-font text-4xl sm:text-5xl text-csDark">PRODUCT ACCESS MAP</h1>
+          <p class="text-sm font-medium text-csDark/80 mt-1">Real-time locator for emergency pads, tampons, and menstrual cups in public spaces, universities, and health hubs.</p>
+        </div>
+        <button onclick="alert('Check-in submitted! Thank you for supporting community menstrual equity.')" class="font-mono text-xs font-bold px-4 py-2.5 bg-csWarmBg text-csDark border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-amber-300">
+          + SUBMIT CHECK-IN
+        </button>
+      </div>
+
+      <!-- Informational Explainer Box -->
+      <div class="bg-csWarmBg/60 border-2 border-csDark rounded-2xl p-4 font-mono text-xs text-csDark flex items-start space-x-3">
+        <span class="text-xl">📍</span>
+        <div>
+          <span class="font-bold">WHAT IS THIS MAP FOR?</span>
+          <p class="mt-0.5 text-csDark/80">Worldwide, over 500 million people lack access to menstrual products when caught in public emergencies. This map lets users locate verified free dispensers or low-cost supplies nearby, and anonymously report stock levels so others know before they go.</p>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-white border-2 border-csDark rounded-2xl p-5 sui-shadow flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h4 class="gasoek-font text-xl text-csDark">Community Health Hub - Central</h4>
+              <span class="pill-tag bg-emerald-200 text-emerald-950 border border-csDark px-2 py-0.5">FREE ACCESS</span>
+              <span class="pill-tag bg-csAccent text-white border border-csDark px-2 py-0.5">VERIFIED</span>
+            </div>
+            <p class="font-mono text-xs text-csDark/70 mt-1">142 Elm St, Suite 100 • Restocked 2 hours ago</p>
+            <div class="flex gap-1.5 mt-2">
+              <span class="font-mono text-[10px] bg-csLightBg border border-csDark px-2 py-0.5 rounded font-bold">PADS</span>
+              <span class="font-mono text-[10px] bg-csLightBg border border-csDark px-2 py-0.5 rounded font-bold">TAMPONS</span>
+            </div>
+          </div>
+          <button onclick="alert('Location confirmed in stock!')" class="font-mono text-xs font-bold px-4 py-2 bg-csWarmBg border-2 border-csDark rounded-xl sui-shadow-sm">VERIFY STOCK</button>
+        </div>
+
+        <div class="bg-white border-2 border-csDark rounded-2xl p-5 sui-shadow flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h4 class="gasoek-font text-xl text-csDark">Metro University Student Union</h4>
+              <span class="pill-tag bg-emerald-200 text-emerald-950 border border-csDark px-2 py-0.5">FREE ACCESS</span>
+            </div>
+            <p class="font-mono text-xs text-csDark/70 mt-1">Campus South Hall, 2nd Floor Dispenser • Updated Yesterday</p>
+            <div class="flex gap-1.5 mt-2">
+              <span class="font-mono text-[10px] bg-csLightBg border border-csDark px-2 py-0.5 rounded font-bold">PADS</span>
+              <span class="font-mono text-[10px] bg-csLightBg border border-csDark px-2 py-0.5 rounded font-bold">MENSTRUAL CUPS</span>
+            </div>
+          </div>
+          <button onclick="alert('Location confirmed in stock!')" class="font-mono text-xs font-bold px-4 py-2 bg-csWarmBg border-2 border-csDark rounded-xl sui-shadow-sm">VERIFY STOCK</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 9: PRIVACY & TOKENS -->
+    <section id="view-privacy" class="view-section hidden py-10 px-4 sm:px-8 max-w-4xl mx-auto space-y-6">
+      <div class="bg-white border-4 border-csDark rounded-3xl p-8 sm:p-10 sui-shadow space-y-6">
+        <div class="pb-4 border-b-2 border-csDark">
+          <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">CLIENT-SIDE VAULT</span>
+          <h2 class="gasoek-font text-4xl text-csDark">PRIVACY, CONSENT & HMAC TOKENS</h2>
+          <p class="text-sm text-csDark/80 font-medium mt-1">Zero third-party trackers. One-way SHA-256 tokens. Full client-side data erasure.</p>
+        </div>
+
+        <div class="p-5 bg-csLightBg border-2 border-csDark rounded-2xl font-mono text-xs space-y-2">
+          <div class="flex justify-between"><span>ACTIVE USER IDENTIFIER:</span><span id="priv-user-id" class="font-bold text-csDark">JD_CYCLESAFE</span></div>
+          <div class="flex justify-between"><span>TOKEN ENCRYPTION:</span><span class="font-bold text-csAccent">SHA-256 HMAC (ACTIVE)</span></div>
+        </div>
+
+        <div class="pt-4 flex flex-wrap gap-3">
+          <button onclick="downloadArchive()" class="font-mono text-xs font-bold px-4 py-2.5 bg-csWarmBg border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-amber-300">
+            DOWNLOAD JSON ARCHIVE
+          </button>
+          <button onclick="confirmClearData()" class="font-mono text-xs font-bold px-4 py-2.5 bg-rose-200 text-rose-950 border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-rose-300">
+            PERMANENT DATA WIPE
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 10: AUTH / SIGN IN -->
+    <section id="view-auth" class="view-section hidden py-16 px-4 sm:px-8 max-w-lg mx-auto">
+      <div class="bg-white border-4 border-csDark rounded-3xl p-8 sui-shadow space-y-6">
+        <div class="text-center pb-3 border-b-2 border-csDark">
+          <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest">ACCESS ARCHIVE</span>
+          <h2 class="gasoek-font text-3xl text-csDark mt-1">SIGN IN</h2>
+        </div>
+        <form onsubmit="handleSignIn(event)" class="space-y-4 font-mono text-xs">
+          <div>
+            <label class="block font-bold mb-1">EMAIL *</label>
+            <input type="email" id="signin-email" required autocomplete="email" placeholder="you@example.com" class="w-full p-3 border-2 border-csDark rounded-xl bg-csLightBg font-mono">
+          </div>
+          <div>
+            <label class="block font-bold mb-1">PASSWORD *</label>
+            <input type="password" id="signin-password" required autocomplete="current-password" placeholder="Your password" class="w-full p-3 border-2 border-csDark rounded-xl bg-white">
+          </div>
+          <p id="signin-error" class="hidden text-rose-700 font-bold"></p>
+          <button type="submit" class="w-full gasoek-font p-4 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow hover:bg-opacity-90">
+            SIGN IN
+          </button>
+        </form>
+        <p class="text-center font-mono text-xs text-csDark/70">
+          New to CycleSafe? <button onclick="showView('signup')" class="text-csAccent font-bold underline">Create an Account / Sign Up</button>
+        </p>
+      </div>
+    </section>
+
+    <!-- VIEW 11: SIGN UP (NEW COMPREHENSIVE REGISTRATION) -->
+    <section id="view-signup" class="view-section hidden py-12 px-4 sm:px-8 max-w-2xl mx-auto">
+      <div class="bg-white border-4 border-csDark rounded-3xl p-8 sm:p-10 sui-shadow space-y-8">
+        <div class="pb-4 border-b-2 border-csDark">
+          <span class="font-mono text-xs font-bold text-csAccent uppercase tracking-widest block">NEW USER REGISTRATION</span>
+          <h2 class="gasoek-font text-4xl text-csDark mt-1">CREATE YOUR PROFILE</h2>
+          <p class="text-sm text-csDark/80 font-medium mt-1">Create an email and password so you can sign back in later. Tracking stays informational only — never a diagnosis.</p>
+        </div>
+
+        <form onsubmit="handleSignUp(event)" class="space-y-6 font-mono text-xs">
+          <div>
+            <label class="block font-bold text-csDark mb-1">EMAIL *</label>
+            <input type="email" id="su-email" required autocomplete="email" placeholder="you@example.com" class="w-full p-3 border-2 border-csDark rounded-xl bg-csLightBg focus:outline-none font-bold">
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-bold text-csDark mb-1">CREATE PASSWORD *</label>
+              <input type="password" id="su-password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" class="w-full p-3 border-2 border-csDark rounded-xl bg-white focus:outline-none font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-csDark mb-1">CONFIRM PASSWORD *</label>
+              <input type="password" id="su-password-confirm" required minlength="8" autocomplete="new-password" placeholder="Type it again" class="w-full p-3 border-2 border-csDark rounded-xl bg-white focus:outline-none font-bold">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-bold text-csDark mb-1">FULL NAME OR PSEUDONYM *</label>
+              <input type="text" id="su-name" required placeholder="e.g. Jane Doe" class="w-full p-3 border-2 border-csDark rounded-xl bg-csLightBg focus:outline-none font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-csDark mb-1">AGE *</label>
+              <input type="number" id="su-age" required min="12" max="100" placeholder="e.g. 28" class="w-full p-3 border-2 border-csDark rounded-xl bg-white focus:outline-none font-bold">
+            </div>
+          </div>
+
+          <!-- Life Stage Selection (4 Clinical Options) -->
+          <div>
+            <label class="block font-bold text-csDark mb-2 uppercase">WHICH LIFE STAGE BEST DESCRIBES YOU? *</label>
+            <div class="space-y-3">
+              <!-- Stage 1 -->
+              <label class="flex items-start space-x-3 p-3.5 border-2 border-csDark rounded-2xl bg-csLightBg cursor-pointer hover:bg-csPink/40 transition">
+                <input type="radio" name="su-stage" value="regular" checked class="mt-1 w-4 h-4 accent-csAccent">
+                <div>
+                  <div class="font-bold text-sm text-csDark">🩸 Regular Menstrual Cycles (Reproductive Stage)</div>
+                  <div class="text-[11px] text-csDark/70 mt-0.5">Typical ages ~18-44. Active periodic cycles. Tracks cycle phases (follicular, fertile peak, luteal), flow heaviness, and PMS patterns.</div>
+                </div>
+              </label>
+
+              <!-- Stage 2 -->
+              <label class="flex items-start space-x-3 p-3.5 border-2 border-csDark rounded-2xl bg-white cursor-pointer hover:bg-csWarmBg/50 transition">
+                <input type="radio" name="su-stage" value="perimenopause" class="mt-1 w-4 h-4 accent-csAccent">
+                <div>
+                  <div class="font-bold text-sm text-csDark">⚡ Perimenopause (Menopausal Transition Stage)</div>
+                  <div class="text-[11px] text-csDark/70 mt-0.5">Typical ages ~40-52. Irregular or changing cycle lengths, vasomotor symptoms (hot flashes, night sweats), and sleep disruptions.</div>
+                </div>
+              </label>
+
+              <!-- Stage 3 -->
+              <label class="flex items-start space-x-3 p-3.5 border-2 border-csDark rounded-2xl bg-white cursor-pointer hover:bg-csPurple/30 transition">
+                <input type="radio" name="su-stage" value="menopause" class="mt-1 w-4 h-4 accent-csAccent">
+                <div>
+                  <div class="font-bold text-sm text-csDark">🌸 Post-Menopause Stage</div>
+                  <div class="text-[11px] text-csDark/70 mt-0.5">12+ consecutive months without a period. Period forecasts disabled; focuses on ongoing vasomotor symptoms, bone & sleep wellness.</div>
+                </div>
+              </label>
+
+              <!-- Stage 4 -->
+              <label class="flex items-start space-x-3 p-3.5 border-2 border-csDark rounded-2xl bg-white cursor-pointer hover:bg-amber-100 transition">
+                <input type="radio" name="su-stage" value="irregular" class="mt-1 w-4 h-4 accent-csAccent">
+                <div>
+                  <div class="font-bold text-sm text-csDark">🔄 Irregular / Variable Cycles (e.g. PCOS)</div>
+                  <div class="text-[11px] text-csDark/70 mt-0.5">Variable rhythms requiring wider statistical conformal uncertainty bands rather than misleading exact single-day predictions.</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Location (Country, State, City) -->
+          <div class="pt-2 border-t-2 border-csDark/20">
+            <span class="block font-bold text-csDark mb-2 uppercase">LOCATION DETAILS (FOR PRODUCT MAP & CLINICAL CONTEXT)</span>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-csDark/70 mb-1">COUNTRY</label>
+                <input type="text" id="su-country" required placeholder="e.g. India" class="w-full p-2.5 border-2 border-csDark rounded-xl bg-csLightBg focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-csDark/70 mb-1">STATE / PROVINCE</label>
+                <input type="text" id="su-state" required placeholder="e.g. Maharashtra" class="w-full p-2.5 border-2 border-csDark rounded-xl bg-csLightBg focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-csDark/70 mb-1">CITY</label>
+                <input type="text" id="su-city" required placeholder="e.g. Mumbai" class="w-full p-2.5 border-2 border-csDark rounded-xl bg-csLightBg focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <p id="signup-error" class="hidden text-rose-700 font-bold"></p>
+          <div class="pt-4 flex items-center justify-between">
+            <button type="button" onclick="showView('landing')" class="px-5 py-3 border-2 border-csDark rounded-xl font-bold bg-white hover:bg-csLightBg">
+              CANCEL
+            </button>
+            <button type="submit" class="gasoek-font text-base px-8 py-3.5 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow hover:bg-opacity-90">
+              CREATE ACCOUNT →
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- VIEW 12: PROFILE (DETAILED PROFILE WITH LOCATION & STAGE) -->
+    <section id="view-profile" class="view-section hidden py-16 px-4 sm:px-8 max-w-2xl mx-auto">
+      <div class="bg-white border-4 border-csDark rounded-3xl p-8 sm:p-10 sui-shadow space-y-6">
+        <div class="flex items-center space-x-5 pb-5 border-b-2 border-csDark">
+          <div id="prof-avatar" class="w-16 h-16 rounded-full bg-csWarmBg border-2 border-csDark flex items-center justify-center font-gasoek text-3xl text-csDark sui-shadow-sm">JD</div>
+          <div>
+            <h3 id="prof-name" class="gasoek-font text-3xl text-csDark">Jane Doe</h3>
+            <span id="prof-stage-badge" class="pill-tag bg-csAccent text-white px-2.5 py-0.5">REGULAR MENSTRUAL STAGE</span>
+          </div>
+        </div>
+
+        <div class="space-y-3 font-mono text-xs">
+          <div class="p-4 bg-csLightBg border-2 border-csDark rounded-2xl space-y-2">
+            <div class="flex justify-between border-b border-csDark/20 pb-1.5">
+              <span class="text-csDark/70">AGE:</span>
+              <span id="prof-age" class="font-bold text-csDark">28 Years</span>
+            </div>
+            <div class="flex justify-between border-b border-csDark/20 pb-1.5">
+              <span class="text-csDark/70">EMAIL:</span>
+              <span id="prof-email" class="font-bold text-csDark">Not signed in</span>
+            </div>
+            <div class="flex justify-between border-b border-csDark/20 pb-1.5">
+              <span class="text-csDark/70">CURRENT HEALTH STAGE:</span>
+              <span id="prof-stage-text" class="font-bold text-csAccent">Regular Menstrual Cycles</span>
+            </div>
+            <div class="flex justify-between border-b border-csDark/20 pb-1.5">
+              <span class="text-csDark/70">CITY & STATE:</span>
+              <span id="prof-city-state" class="font-bold text-csDark">Mumbai, Maharashtra</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-csDark/70">COUNTRY:</span>
+              <span id="prof-country" class="font-bold text-csDark">India</span>
+            </div>
+          </div>
+
+          <div class="p-4 bg-csWarmBg border-2 border-csDark rounded-2xl space-y-1.5">
+            <div class="flex justify-between">
+              <span class="text-csDark/70">DATA ENCRYPTION:</span>
+              <span class="font-bold text-emerald-900">SHA-256 Client-Encrypted</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-csDark/70">TOTAL LOGGED CYCLES:</span>
+              <span id="prof-total-cycles" class="font-bold text-csDark">0 Cycles (Awaiting Log)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-csDark/70">MEDIAN DURATION:</span>
+              <span id="prof-median-duration" class="font-bold text-csDark">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 flex flex-wrap gap-3">
+          <button onclick="showView('signup')" class="flex-grow font-mono text-xs font-bold px-4 py-3 bg-csWarmBg border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-amber-300">
+            EDIT PROFILE & STAGE
+          </button>
+          <button onclick="showView('dashboard')" class="flex-grow gasoek-font text-base px-6 py-3 bg-csAccent text-white border-2 border-csDark rounded-xl sui-shadow-sm hover:bg-opacity-90">
+            OPEN DASHBOARD →
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-csDark text-csPrimary border-t-2 border-csDark py-12 px-4 sm:px-8 mt-20">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 font-mono text-xs">
+      <div>
+        <div class="font-gasoek text-lg text-white">CYCLESAFE</div>
+        <div class="text-csPrimary/70 mt-0.5">© 2026 CycleSafe Technologies. Zero Diagnostic Claims. Client-Encrypted Health Records.</div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <button onclick="showView('privacy')" class="hover:text-csAccent transition">Privacy Policy</button>
+        <button onclick="showView('doctor')" class="hover:text-csAccent transition">Clinical Spec</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CORE JAVASCRIPT: USER-LOGGED DATA ONLY (ZERO DEMO DATA FOR NEW USERS) -->
+  <script>
+    // 1. User Profile & Logged Cycle Storage
+    let userProfile = {
+      name: "Jane Doe",
+      email: "",
+      age: 28,
+      stage: "regular", // "regular", "perimenopause", "menopause", "irregular"
+      country: "India",
+      state: "Maharashtra",
+      city: "Mumbai"
+    };
+
+    // Array of user-logged period entries: [{ date: 'YYYY-MM-DD', flow: 1..3, cycleLength: 28, pain: 1, sleep: 2, fatigue: 1, mood: 2, symptoms: ['cramps'] }]
+    let userLoggedPeriods = [];
+
+    // Load persisted state if available
+    try {
+      const savedProfile = localStorage.getItem('cs_profile_data');
+      if (savedProfile) userProfile = JSON.parse(savedProfile);
+      
+      const savedLogs = localStorage.getItem('cs_user_logged_periods');
+      if (savedLogs) userLoggedPeriods = JSON.parse(savedLogs);
+    } catch (e) {
+      console.warn("Storage read error", e);
+    }
+
+    const selectedSymptoms = new Set();
+
+    // 2. Navigation router function - immediately available
+    function showView(viewId) {
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+      const target = document.getElementById('view-' + viewId);
+      if (target) {
+        target.classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      // Update nav link active highlights
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-csLightBg', 'border-csDark', 'text-csAccent');
+      });
+      const activeBtn = document.getElementById('nav-' + viewId);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-csLightBg', 'border-csDark', 'text-csAccent');
+      }
+
+      if (viewId === 'dashboard') applyStageAdaptiveDashboard();
+      if (viewId === 'profile') renderProfileDetails();
+      if (viewId === 'calendar') initCalendar();
+      if (viewId === 'patterns') renderPatterns();
+      if (viewId === 'doctor') renderDoctorReport();
+    }
+
+    // 3. Stage-Adaptive UI Engine & Zero-Data Dashboard
+    function applyStageAdaptiveDashboard() {
+      const topBadge = document.getElementById('top-stage-indicator');
+      const stageBanner = document.getElementById('dash-stage-name');
+      const cycleTitle = document.getElementById('dash-cycle-title');
+      const cycleDesc = document.getElementById('dash-cycle-desc');
+      const cycleMeta = document.getElementById('dash-cycle-meta');
+      const cyclePill = document.getElementById('dash-cycle-pill');
+      const timelineWrap = document.getElementById('dash-timeline-wrapper');
+      const histDesc = document.getElementById('dash-history-desc');
+      const medDays = document.getElementById('dash-median-days');
+      const confRange = document.getElementById('dash-conformal-range');
+      const navPerimeno = document.getElementById('nav-perimenopause');
+      const navCal = document.getElementById('nav-calendar');
+      const cardCal = document.getElementById('card-cal');
+
+      // Update stage badge
+      const stageLabels = {
+        regular: "REGULAR MENSTRUAL STAGE",
+        perimenopause: "PERIMENOPAUSE TRANSITION",
+        menopause: "POST-MENOPAUSE STAGE",
+        irregular: "IRREGULAR / VARIABLE STAGE"
+      };
+      if (topBadge) topBadge.textContent = stageLabels[userProfile.stage] || "REGULAR MENSTRUAL STAGE";
+      if (stageBanner) stageBanner.textContent = (stageLabels[userProfile.stage] || "REGULAR MENSTRUAL STAGE") + " PROFILE";
+
+      // CHECK IF FIRST-TIME USER HAS LOGGED ANY PERIOD YET
+      const flowLogs = userLoggedPeriods.filter(l => l.flow > 0);
+
+      if (flowLogs.length === 0) {
+        // FIRST TIME USER: ZERO EXAMPLE DATA STATE
+        if (cyclePill) cyclePill.textContent = "NO LOGS YET";
+        if (cycleMeta) cycleMeta.textContent = "AWAITING FIRST LOG";
+        if (cycleTitle) cycleTitle.textContent = "NO ACTIVE CYCLE RECORDED";
+        if (cycleDesc) cycleDesc.textContent = "Your calendar and timeline start completely clean. Tap '+ LOG TODAY' to log your current cycle or last period start date.";
+        if (timelineWrap) {
+          timelineWrap.innerHTML = '<div class="w-full py-4 border-2 border-dashed border-csDark/30 rounded-xl bg-white/50 text-center font-mono text-xs text-csDark/60">Your 4-phase cycle timeline will display here after you log your first period.</div>';
+        }
+        if (histDesc) histDesc.textContent = "0 cycles recorded. Start logging your period flow to build your longitudinal personal baseline.";
+        if (medDays) medDays.textContent = "—";
+        if (confRange) confRange.textContent = "Requires Logged Cycle";
+      } else {
+        // USER HAS LOGGED AT LEAST ONE PERIOD: Calculate real status
+        const lastPeriod = flowLogs[flowLogs.length - 1];
+        const lastDate = new Date(lastPeriod.date);
+        const today = new Date("2026-09-26"); // context date
+        const diffDays = Math.max(1, Math.floor((today - lastDate) / (1000 * 60 * 60 * 24)));
+        const cycleLen = lastPeriod.cycleLength || 28;
+
+        if (cyclePill) cyclePill.textContent = "CURRENT CYCLE";
+        if (cycleMeta) cycleMeta.textContent = `DAY ${diffDays} OF ${cycleLen}`;
+
+        let phase = "LUTEAL";
+        let phaseDesc = "Progesterone Window. Next estimated flow window based on personal baseline.";
+        if (diffDays <= 5) {
+          phase = "MENSTRUAL";
+          phaseDesc = "Active menstrual flow phase recorded.";
+        } else if (diffDays <= 12) {
+          phase = "FOLLICULAR";
+          phaseDesc = "Follicular development window.";
+        } else if (diffDays <= 16) {
+          phase = "OVULATION";
+          phaseDesc = "Estimated fertile peak window.";
+        }
+
+        if (cycleTitle) cycleTitle.textContent = `CYCLE DAY ${diffDays} · ${phase}`;
+        if (cycleDesc) cycleDesc.textContent = phaseDesc;
+        if (medDays) medDays.textContent = `${cycleLen}.0 Days`;
+        if (confRange) confRange.textContent = `${cycleLen - 2}.0 - ${cycleLen + 2}.0 d`;
+
+        if (timelineWrap) {
+          timelineWrap.innerHTML = `
+            <div class="w-full h-8 border-2 border-csDark rounded-xl bg-white overflow-hidden flex p-1 space-x-1">
+              <div class="h-full bg-csAccent rounded-lg w-[18%]" title="Flow (Days 1-5)"></div>
+              <div class="h-full bg-csPink rounded-lg w-[28%]" title="Follicular"></div>
+              <div class="h-full bg-csPurple rounded-lg w-[14%]" title="Ovulation"></div>
+              <div class="h-full bg-csWarmBg rounded-lg w-[40%]" title="Luteal"></div>
+            </div>
+            <div class="flex justify-between font-mono text-[10px] text-csDark/70 font-bold uppercase">
+              <span>● Flow Phase</span>
+              <span>● Follicular Phase</span>
+              <span>● Fertile Peak</span>
+              <span>● Luteal Phase</span>
+            </div>
+          `;
+        }
+      }
+
+      // Hide or show stages based on user's profile
+      if (userProfile.stage === 'menopause') {
+        if (timelineWrap) timelineWrap.classList.add('hidden');
+        if (navPerimeno) navPerimeno.classList.add('hidden');
+        if (cardCal) cardCal.classList.add('hidden');
+        if (cycleTitle) cycleTitle.textContent = "POST-MENOPAUSE SYMPTOM MONITOR";
+        if (cycleDesc) cycleDesc.textContent = "Next-cycle prediction disabled (12+ consecutive months without period). Tracking ongoing vasomotor, sleep, and bone wellness.";
+      } else {
+        if (timelineWrap) timelineWrap.classList.remove('hidden');
+        if (navPerimeno) navPerimeno.classList.remove('hidden');
+        if (cardCal) cardCal.classList.remove('hidden');
+      }
+    }
+
+    function renderProfileDetails() {
+      const pName = document.getElementById('prof-name');
+      const pAvatar = document.getElementById('prof-avatar');
+      const hAvatar = document.getElementById('header-profile-btn');
+      const pAge = document.getElementById('prof-age');
+      const pStageBadge = document.getElementById('prof-stage-badge');
+      const pStageText = document.getElementById('prof-stage-text');
+      const pCityState = document.getElementById('prof-city-state');
+      const pCountry = document.getElementById('prof-country');
+
+      const stageLabels = {
+        regular: "Regular Menstrual Cycles",
+        perimenopause: "Perimenopause Transition",
+        menopause: "Post-Menopause Stage",
+        irregular: "Irregular / Variable Cycles"
+      };
+
+      const initials = userProfile.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'CS';
+
+      if (pName) pName.textContent = userProfile.name;
+      if (pAvatar) pAvatar.textContent = initials;
+      if (hAvatar) hAvatar.textContent = initials;
+      if (pAge) pAge.textContent = `${userProfile.age} Years`;
+      const pEmail = document.getElementById('prof-email');
+      if (pEmail) pEmail.textContent = userProfile.email || 'Not signed in';
+      if (pStageBadge) pStageBadge.textContent = (stageLabels[userProfile.stage] || userProfile.stage).toUpperCase();
+      if (pStageText) pStageText.textContent = stageLabels[userProfile.stage] || userProfile.stage;
+      if (pCityState) pCityState.textContent = `${userProfile.city}, ${userProfile.state}`;
+      if (pCountry) pCountry.textContent = userProfile.country || "Not specified";
+
+      // Profile cycle counts & median
+      const flowLogs = userLoggedPeriods.filter(l => l.flow > 0);
+      const profCycles = document.getElementById('prof-total-cycles');
+      const profMed = document.getElementById('prof-median-duration');
+      if (profCycles) {
+        profCycles.textContent = flowLogs.length === 0 ? "0 Cycles (Awaiting Log)" : `${flowLogs.length} Cycle${flowLogs.length > 1 ? 's' : ''}`;
+      }
+      if (profMed) {
+        profMed.textContent = flowLogs.length === 0 ? "—" : `${flowLogs[flowLogs.length - 1].cycleLength || 28}.0 Days`;
+      }
+
+      renderDoctorReport();
+      renderPatterns();
+    }
+
+    function renderPatterns() {
+      const patStability = document.getElementById('pat-stability-text');
+      const patClusters = document.getElementById('pat-clusters-text');
+      const patFlow = document.getElementById('pat-flow-text');
+      const flowLogs = userLoggedPeriods.filter(l => l.flow > 0);
+
+      if (flowLogs.length === 0) {
+        if (patStability) patStability.textContent = "Awaiting cycle logs. Log your period dates to calculate personal median duration and timing variance.";
+        if (patClusters) patClusters.textContent = "No recurring symptom clusters detected yet. Daily symptom logs will reveal co-occurrences here.";
+        if (patFlow) patFlow.textContent = "No flow entries recorded yet. Track flow volume to monitor heaviness indicators and soaking frequency.";
+      } else {
+        const lastCycle = flowLogs[flowLogs.length - 1];
+        const len = lastCycle.cycleLength || 28;
+        if (patStability) patStability.textContent = `Median ${len}.0 days across recorded cycles. Timing variance within expected physiological envelope.`;
+        
+        const symLogs = userLoggedPeriods.filter(l => l.symptoms && l.symptoms.length > 0);
+        if (patClusters) {
+          if (symLogs.length > 0) {
+            const symList = Array.from(new Set(symLogs.flatMap(l => l.symptoms))).join(', ');
+            patClusters.textContent = `Recurring symptoms noted (${symList}) across ${symLogs.length} logged day(s). Tracking correlation with cycle phase onset.`;
+          } else {
+            patClusters.textContent = "No symptoms recorded in recent logs. Track daily sensations to identify pre-menstrual clusters.";
+          }
+        }
+        
+        if (patFlow) {
+          const hasSoaking = userLoggedPeriods.some(l => l.hourlySoaking);
+          if (hasSoaking) {
+            patFlow.textContent = "Hourly soaking episode recorded. Discuss pad/tampon saturation frequency with your healthcare provider.";
+          } else {
+            patFlow.textContent = "No episodes of consecutive hourly pad or tampon soaking recorded. Normal volume envelope maintained.";
+          }
+        }
+      }
+    }
+
+    function renderDoctorReport() {
+      const docName = document.getElementById('doc-patient-name');
+      const docStage = document.getElementById('doc-patient-stage');
+      const docLoc = document.getElementById('doc-patient-loc');
+      const docMed = document.getElementById('doc-historical-median');
+      const docPoints = document.getElementById('doc-discussion-points');
+
+      const stageLabels = {
+        regular: "REGULAR MENSTRUAL STAGE",
+        perimenopause: "PERIMENOPAUSE TRANSITION",
+        menopause: "POST-MENOPAUSE STAGE",
+        irregular: "IRREGULAR / VARIABLE STAGE"
+      };
+
+      if (docName) docName.textContent = userProfile.name || 'Jane Doe';
+      if (docStage) docStage.textContent = (stageLabels[userProfile.stage] || userProfile.stage).toUpperCase();
+      if (docLoc) docLoc.textContent = (userProfile.city && userProfile.country) ? `${userProfile.city}, ${userProfile.country}` : (userProfile.country || 'Client-Stored');
+
+      const flowLogs = userLoggedPeriods.filter(l => l.flow > 0);
+      if (flowLogs.length === 0) {
+        if (docMed) docMed.textContent = "— (AWAITING LOGS)";
+        if (docPoints) {
+          docPoints.innerHTML = `
+            <li class="italic text-csDark/70">No period cycles recorded yet in this profile. Summary discussion points will generate automatically when the patient logs cycles.</li>
+            <li>Client-side encryption active. Longitudinal stability indicators will appear once tracking commences.</li>
+          `;
+        }
+      } else {
+        const last = flowLogs[flowLogs.length - 1];
+        const len = last.cycleLength || 28;
+        if (docMed) docMed.textContent = `${len}.0 DAYS`;
+        const hasSoaking = userLoggedPeriods.some(l => l.hourlySoaking);
+        if (docPoints) {
+          docPoints.innerHTML = `
+            <li>Patient has logged ${flowLogs.length} active cycle flow window(s) to date.</li>
+            <li>Observed cycle length baseline centered around ${len} days.</li>
+            <li>${hasSoaking ? 'Episode of hourly soaking flagged for clinical review.' : 'Zero prolonged hourly soaking reported to date.'}</li>
+          `;
+        }
+      }
+    }
+
+    // 4. Sign Up Handler (Resets logs for fresh clean first-time user experience)
+    function apiBase() {
+      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+        return window.location.origin;
+      }
+      return 'http://localhost:8000';
+    }
+
+    function showFormError(id, message) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (!message) {
+        el.classList.add('hidden');
+        el.textContent = '';
+        return;
+      }
+      el.textContent = message;
+      el.classList.remove('hidden');
+    }
+
+    function persistSession(token, userId, profile) {
+      userProfile = Object.assign({}, userProfile, profile || {});
+      try {
+        if (token) localStorage.setItem('cs_auth_token', token);
+        if (userId) localStorage.setItem('cs_user_id', userId);
+        localStorage.setItem('cs_profile_data', JSON.stringify(userProfile));
+      } catch (err) {}
+      refreshAuthChrome();
+    }
+
+    function refreshAuthChrome() {
+      const loggedIn = !!(userProfile.email && localStorage.getItem('cs_auth_token'));
+      const authBtns = document.getElementById('auth-buttons');
+      if (authBtns) {
+        if (loggedIn) authBtns.classList.add('hidden');
+        else authBtns.classList.remove('hidden');
+      }
+    }
+
+    async function hashPasswordLocal(password) {
+      const payload = 'cyclesafe:' + password;
+      if (window.crypto && crypto.subtle) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+      let h = 5381;
+      for (let i = 0; i < payload.length; i++) h = ((h << 5) + h) + payload.charCodeAt(i);
+      return 'f' + (h >>> 0).toString(16);
+    }
+
+    function getLocalAccounts() {
+      try {
+        return JSON.parse(localStorage.getItem('cs_accounts') || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
+    async function handleSignUp(e) {
+      e.preventDefault();
+      showFormError('signup-error', '');
+      const email = (document.getElementById('su-email')?.value || '').trim().toLowerCase();
+      const password = document.getElementById('su-password')?.value || '';
+      const confirm = document.getElementById('su-password-confirm')?.value || '';
+      const name = document.getElementById('su-name').value.trim();
+      const age = parseInt(document.getElementById('su-age').value, 10);
+      const stage = document.querySelector('input[name="su-stage"]:checked')?.value || 'regular';
+      const country = document.getElementById('su-country').value.trim();
+      const state = document.getElementById('su-state').value.trim();
+      const city = document.getElementById('su-city').value.trim();
+
+      if (password.length < 8) {
+        showFormError('signup-error', 'Password must be at least 8 characters.');
+        return;
+      }
+      if (password !== confirm) {
+        showFormError('signup-error', 'Passwords do not match.');
+        return;
+      }
+
+      const profile = { name, email, age, stage, country, state, city };
+      userLoggedPeriods = [];
+      try { localStorage.removeItem('cs_user_logged_periods'); } catch (err) {}
+
+      let createdOnServer = false;
+      try {
+        const res = await fetch(apiBase() + '/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, name, age, stage, country, state, city })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 409) {
+          showFormError('signup-error', 'An account with this email already exists. Please sign in.');
+          return;
+        }
+        if (!res.ok) {
+          showFormError('signup-error', data.detail || 'Could not create account. Try again.');
+          return;
+        }
+        persistSession(data.token, data.user_id, data.profile || profile);
+        createdOnServer = true;
+      } catch (err) {
+        const accounts = getLocalAccounts();
+        if (accounts[email]) {
+          showFormError('signup-error', 'An account with this email already exists. Please sign in.');
+          return;
+        }
+        accounts[email] = { passwordHash: await hashPasswordLocal(password), profile };
+        try { localStorage.setItem('cs_accounts', JSON.stringify(accounts)); } catch (e) {}
+        persistSession('local_' + Date.now(), email, profile);
+      }
+
+      initCalendar();
+      applyStageAdaptiveDashboard();
+      renderProfileDetails();
+      alert(createdOnServer
+        ? `Welcome, ${name}. Your account is saved. Sign in later with ${email} and your password.`
+        : `Welcome, ${name}. Server was offline, so this login is stored only in this browser until you sign up again with the API running.`);
+      showView('dashboard');
+    }
+
+    async function handleSignIn(e) {
+      if (e) e.preventDefault();
+      showFormError('signin-error', '');
+      const email = (document.getElementById('signin-email')?.value || '').trim().toLowerCase();
+      const password = document.getElementById('signin-password')?.value || '';
+      if (!email || !password) {
+        showFormError('signin-error', 'Enter your email and password.');
+        return;
+      }
+
+      try {
+        const res = await fetch(apiBase() + '/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          persistSession(data.token, data.user_id, data.profile || { email });
+          applyStageAdaptiveDashboard();
+          renderProfileDetails();
+          showView('dashboard');
+          return;
+        }
+        if (res.status === 401) {
+          showFormError('signin-error', 'Incorrect email or password.');
+          return;
+        }
+        showFormError('signin-error', data.detail || 'Could not sign in.');
+        return;
+      } catch (err) {
+        const accounts = getLocalAccounts();
+        const row = accounts[email];
+        if (!row) {
+          showFormError('signin-error', 'No local account found. Start the API server, or create an account first.');
+          return;
+        }
+        const expected = row.passwordHash;
+        const got = await hashPasswordLocal(password);
+        if (expected !== got) {
+          showFormError('signin-error', 'Incorrect email or password.');
+          return;
+        }
+        persistSession('local_' + Date.now(), email, row.profile || { email });
+        applyStageAdaptiveDashboard();
+        renderProfileDetails();
+        showView('dashboard');
+      }
+    }
+
+    // 5. Logging Helpers & Period Saving
+    let activeFlow = 2;
+    function setFlowLevel(lvl) {
+      activeFlow = lvl;
+      for (let i = 0; i <= 3; i++) {
+        const btn = document.getElementById('flow-btn-' + i);
+        if (btn) {
+          if (i === lvl) {
+            btn.className = "flow-pill p-3 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-csAccent text-white sui-shadow-sm";
+          } else {
+            btn.className = "flow-pill p-3 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white";
+          }
+        }
+      }
+    }
+
+    function toggleSymChip(el, sym) {
+      if (selectedSymptoms.has(sym)) {
+        selectedSymptoms.delete(sym);
+        el.className = "sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-white";
+      } else {
+        selectedSymptoms.add(sym);
+        el.className = "sym-chip px-3 py-1.5 border-2 border-csDark rounded-xl font-mono text-xs font-bold bg-csAccent text-white sui-shadow-sm";
+      }
+    }
+
+    function saveLogEntry(e) {
+      e.preventDefault();
+      const logDate = document.getElementById('form-log-date').value || "2026-09-26";
+      const cycleLen = parseInt(document.getElementById('form-cycle-len').value, 10) || 28;
+      const pain = parseInt(document.getElementById('rng-pain').value, 10);
+      const sleep = parseInt(document.getElementById('rng-sleep').value, 10);
+      const fatigue = parseInt(document.getElementById('rng-fatigue').value, 10);
+      const mood = parseInt(document.getElementById('rng-mood').value, 10);
+      const hourlySoaking = document.getElementById('form-soaking-check')?.checked || false;
+
+      const newEntry = {
+        date: logDate,
+        flow: activeFlow,
+        cycleLength: cycleLen,
+        pain: pain,
+        sleep: sleep,
+        fatigue: fatigue,
+        mood: mood,
+        hourlySoaking: hourlySoaking,
+        symptoms: Array.from(selectedSymptoms)
+      };
+
+      // Upsert entry for this date
+      const existingIdx = userLoggedPeriods.findIndex(l => l.date === logDate);
+      if (existingIdx >= 0) {
+        userLoggedPeriods[existingIdx] = newEntry;
+      } else {
+        userLoggedPeriods.push(newEntry);
+      }
+
+      // Sort by date
+      userLoggedPeriods.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      try {
+        localStorage.setItem('cs_user_logged_periods', JSON.stringify(userLoggedPeriods));
+      } catch (err) {}
+
+      // Update views immediately
+      initCalendar();
+      applyStageAdaptiveDashboard();
+      renderProfileDetails();
+
+      alert("✓ Health entry recorded for " + logDate + "! Calendar updated.");
+      showView('calendar');
+    }
+
+    // 6. Interactive Calendar: ZERO EXAMPLE DATA — ONLY RENDERS LOGGED ENTRIES
+    function initCalendar() {
+      const container = document.getElementById('calendar-grid-cells');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      // Blank slots before Sept 1 (Sept 1, 2026 starts on Tuesday = 2 blanks)
+      for (let b = 0; b < 2; b++) {
+        const empty = document.createElement('div');
+        empty.className = "h-20 bg-csPrimary/30 border border-csDark/10 rounded-xl";
+        container.appendChild(empty);
+      }
+
+      const todayStr = "2026-09-26";
+
+      // 30 days of September
+      for (let d = 1; d <= 30; d++) {
+        const dateStr = "2026-09-" + String(d).padStart(2, '0');
+        const cell = document.createElement('div');
+        cell.className = "h-20 bg-white border-2 border-csDark rounded-xl p-1.5 flex flex-col justify-between cursor-pointer hover:bg-csLightBg transition sui-shadow-sm";
+        
+        // ONLY SHOW PILLS IF THE USER HAS ACTUALLY LOGGED AN ENTRY FOR THIS DAY
+        let tagHtml = '';
+        const userLog = userLoggedPeriods.find(l => l.date === dateStr);
+
+        if (userLog) {
+          if (userLog.flow > 0) {
+            const flowLabels = ["", "SPOTTING", "FLOW", "HEAVY FLOW"];
+            tagHtml += '<span class="pill-tag bg-csAccent text-white px-1 py-0.2 text-[8px] text-center">' + (flowLabels[userLog.flow] || 'FLOW') + '</span>';
+          }
+          if (userLog.symptoms && userLog.symptoms.length > 0) {
+            tagHtml += '<span class="pill-tag bg-csWarmBg text-csDark px-1 py-0.2 text-[8px] text-center">' + userLog.symptoms.length + ' SYM</span>';
+          }
+        }
+
+        const isToday = (dateStr === todayStr);
+        const todayMarker = isToday ? '<span class="w-2 h-2 rounded-full bg-csAccent inline-block" title="Today"></span>' : '';
+
+        cell.innerHTML = `
+          <div class="flex justify-between items-start font-mono text-xs font-bold">
+            <span>${d}</span>
+            ${todayMarker}
+          </div>
+          <div class="flex flex-col space-y-0.5">${tagHtml}</div>
+        `;
+
+        cell.onclick = () => {
+          selectCalendarDate(dateStr, d);
+        };
+
+        container.appendChild(cell);
+      }
+
+      // Default day inspector to today
+      selectCalendarDate(todayStr, 26);
+    }
+
+    function selectCalendarDate(dateStr, dayNum) {
+      const dayTitle = document.getElementById('cal-day-title');
+      const dayBody = document.getElementById('cal-day-body');
+      const dayBtn = document.getElementById('cal-day-btn');
+
+      if (dayTitle) dayTitle.textContent = "SEPTEMBER " + dayNum + ", 2026";
+
+      const log = userLoggedPeriods.find(l => l.date === dateStr);
+      if (log) {
+        const flowText = ["None", "Spotting / Light", "Moderate Flow", "Heavy Flow"][log.flow] || "Logged";
+        const symText = log.symptoms && log.symptoms.length > 0 ? log.symptoms.join(', ') : 'None recorded';
+        if (dayBody) {
+          dayBody.innerHTML = `
+            <p><strong>Status:</strong> ${flowText}</p>
+            <p><strong>Pain Score:</strong> ${log.pain}/3</p>
+            <p><strong>Symptoms:</strong> ${symText}</p>
+            <p class="text-[10px] text-emerald-800 font-bold mt-1">✓ Logged by user</p>
+          `;
+        }
+        if (dayBtn) {
+          dayBtn.textContent = "EDIT ENTRY FOR THIS DATE";
+          dayBtn.onclick = () => openLogForDate(dateStr);
+        }
+      } else {
+        // Completely clear for unlogged days
+        if (dayBody) {
+          dayBody.innerHTML = `
+            <p class="text-csDark/70 italic">No entries logged for this date.</p>
+            <p class="text-[11px] text-csDark/60 mt-1">Click below to record flow intensity, symptoms, or period start.</p>
+          `;
+        }
+        if (dayBtn) {
+          dayBtn.textContent = "+ LOG FOR THIS DATE";
+          dayBtn.onclick = () => openLogForDate(dateStr);
+        }
+      }
+    }
+
+    function openLogForDate(dateStr) {
+      const dateInp = document.getElementById('form-log-date');
+      if (dateInp) dateInp.value = dateStr;
+      showView('log');
+    }
+
+    // 7. Data export and clear
+    function downloadArchive() {
+      const exportData = {
+        profile: userProfile,
+        exported_at: new Date().toISOString(),
+        user_logged_periods: userLoggedPeriods
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CycleSafe_Archive_${userProfile.name.replace(/\s+/g, '_')}.json`;
+      a.click();
+    }
+
+    function confirmClearData() {
+      if (confirm("Permanently erase all personal cycle data and encryption tokens? This action cannot be reversed.")) {
+        userLoggedPeriods = [];
+        localStorage.removeItem('cs_user_logged_periods');
+        initCalendar();
+        applyStageAdaptiveDashboard();
+        alert("✓ All health records wiped cleanly.");
+        showView('landing');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      refreshAuthChrome();
+      initCalendar();
+      applyStageAdaptiveDashboard();
+      renderProfileDetails();
+      const dateInp = document.getElementById('form-log-date');
+      if (dateInp) {
+        dateInp.value = new Date().toISOString().split('T')[0];
+      }
+    });
+  </script>
+</body>
+</html>

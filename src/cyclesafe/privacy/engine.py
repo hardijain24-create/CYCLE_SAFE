@@ -56,11 +56,20 @@ class CycleSafePrivacyEngine:
                     token_hash TEXT
                 )
             """)
-            # Migration: add token_hash column if it doesn't exist (for existing DBs)
-            try:
-                cursor.execute("ALTER TABLE consent ADD COLUMN token_hash TEXT")
-            except sqlite3.OperationalError:
-                pass  # column already exists
+            for col, spec in (
+                ("token_hash", "TEXT"),
+                ("email", "TEXT"),
+                ("password_hash", "TEXT"),
+                ("profile_json", "TEXT"),
+            ):
+                try:
+                    cursor.execute(f"ALTER TABLE consent ADD COLUMN {col} {spec}")
+                except sqlite3.OperationalError:
+                    pass
+            cursor.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_consent_email ON consent(email) "
+                "WHERE email IS NOT NULL AND email != ''"
+            )
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS cycle_logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -117,6 +126,65 @@ class CycleSafePrivacyEngine:
             d = dict(row)
             d["active"] = bool(d["active"] == 1)
             return d
+
+    def get_consent_by_email(self, email: str) -> Optional[Dict]:
+        email_n = (email or "").strip().lower()
+        if not email_n:
+            return None
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM consent WHERE lower(email) = ?", (email_n,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            d = dict(row)
+            d["active"] = bool(d["active"] == 1)
+            return d
+
+    def create_password_account(
+        self,
+        email: str,
+        password_hash: str,
+        profile: Optional[Dict] = None,
+        token_hash: Optional[str] = None,
+    ) -> str:
+        email_n = email.strip().lower()
+        user_id = email_n
+        existing = self.get_consent_by_email(email_n) or self.get_consent(user_id)
+        if existing and existing.get("active"):
+            raise ValueError("account_exists")
+        self.register_consent(user_id, token_hash=token_hash)
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                UPDATE consent
+                SET email = ?, password_hash = ?, profile_json = ?
+                WHERE user_id = ?
+                """,
+                (email_n, password_hash, json.dumps(profile or {}), user_id),
+            )
+            conn.commit()
+        return user_id
+
+    def update_token_hash(self, user_id: str, token_hash: str) -> None:
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE consent SET token_hash = ? WHERE user_id = ?",
+                (token_hash, user_id),
+            )
+            conn.commit()
+
+    def get_profile(self, user_id: str) -> Dict[str, Any]:
+        consent = self.get_consent(user_id)
+        if not consent or not consent.get("profile_json"):
+            return {}
+        try:
+            data = json.loads(consent["profile_json"])
+            return data if isinstance(data, dict) else {}
+        except (TypeError, json.JSONDecodeError):
+            return {}
 
     def has_active_consent(self, user_id: str) -> bool:
         with self._get_connection() as conn:
@@ -228,6 +296,8 @@ class CycleSafePrivacyEngine:
             consent_dict = dict(c_row) if c_row else None
             if consent_dict and consent_dict.get("purposes_json"):
                 consent_dict["purposes"] = json.loads(consent_dict["purposes_json"])
+            if consent_dict:
+                consent_dict.pop("password_hash", None)
 
         cycles = self.get_cycle_records(user_id)
         symptoms = self.get_symptom_records(user_id)
